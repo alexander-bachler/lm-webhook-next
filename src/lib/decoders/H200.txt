@@ -1,0 +1,334 @@
+
+/*
+ #              ######               #                                                   ######                                               #####                                    #    ######  ###
+ #        ####  #     #   ##        # #   #      #      #   ##   #    #  ####  ######    #     #   ##   #   # #       ####    ##   #####     #     #  ####  #####  ######  ####       # #   #     #  #
+ #       #    # #     #  #  #      #   #  #      #      #  #  #  ##   # #    # #         #     #  #  #   # #  #      #    #  #  #  #    #    #       #    # #    # #      #    #     #   #  #     #  #
+ #       #    # ######  #    #    #     # #      #      # #    # # #  # #      #####     ######  #    #   #   #      #    # #    # #    #    #       #    # #    # #####  #         #     # ######   #
+ #       #    # #   #   ######    ####### #      #      # ###### #  # # #      #         #       ######   #   #      #    # ###### #    #    #       #    # #    # #      #         ####### #        #
+ #       #    # #    #  #    #    #     # #      #      # #    # #   ## #    # #         #       #    #   #   #      #    # #    # #    #    #     # #    # #    # #      #    #    #     # #        #
+ #######  ####  #     # #    #    #     # ###### ###### # #    # #    #  ####  ######    #       #    #   #   ######  ####  #    # #####      #####   ####  #####  ######  ####     #     # #       ###
+
+ https://resources.lora-alliance.org/document/ts013-1-0-0-payload-codec-api
+*/
+
+/**
+ * @typedef {Object} DecodedUplink
+ * @property {Object} data - The open JavaScript object representing the decoded uplink payload when no errors occurred
+ * @property {string[]} errors - A list of error messages while decoding the uplink payload
+ * @property {string[]} warnings - A list of warning messages that do not prevent the driver from decoding the uplink payload
+ */
+
+/**
+ * Decode uplink
+ * @param {Object} input - An object provided by the IoT Flow framework
+ * @param {number[]} input.bytes - Array of bytes represented as numbers as it has been sent from the device
+ * @param {number} input.fPort - The Port Field on which the uplink has been sent
+ * @param {Date} input.recvTime - The uplink message time recorded by the LoRaWAN network server
+ * @returns {DecodedUplink} The decoded object
+ */
+//function decodeUplink(input) {}
+
+  function decodeUplink(input) {
+      
+  function decodeMedium(code) {
+    if(code<5 && code >2){
+      code=code-3;
+    }else if(code<7 && code >4){
+      code=code-5;
+    }
+    if(code===0){
+      return "water";
+    }
+    if(code===1){
+      return "warm water"; 
+    }
+    if(code===2){
+      return "gas";
+    }
+    return "unknown";
+  }
+
+  function decodeUnits(code) {
+    if(code < 3 ){
+      return "m3";
+    }else if(code < 5 ){
+      return "galons";
+    }else if(code < 7 ){
+      return "feet3";
+    }else{
+      return "unknown";
+    }
+  }
+
+  function decodeMultiplier(code){
+    if(code == 0){
+      return 0.001;
+    }
+    if(code == 1){
+      return 0.01;
+    }
+    if(code == 2){
+      return 0.1;
+    }
+    if(code == 3){
+      return 1;
+    }
+    if(code == 4){
+      return 10;
+    }
+    return "unknown";
+  }
+
+  function getActualityDuration(input) {
+    var duration = "";
+    if(input < 0 || input > 255){
+      duration = "unknown";
+    }
+    else if(input <= 59) {
+      duration = input + " minutes";
+    }
+    else if(input > 59 && input < 152) {
+      var durationMin = (((input-60)*15)%60);
+      var durationHour = Math.floor((((input - 60) * 15))/60)+1;
+      duration = durationHour + "h " + durationMin +"m";
+    }
+    else if(152 <= input && input < 200){
+      var durationDays = input - 152+1;
+      duration = durationDays + " days";
+    }
+    else if(200 <= input && input < 245){
+      var durationWeeks = input - 200 + 7;
+      duration = durationWeeks + " weeks";
+    }
+    else if(245<= input){
+      var durationYear = 1;
+      duration = "more than " + durationYear + " years";
+    }
+    else {
+      duration = "unknown";
+    }
+    return duration;
+  }
+
+  function hexStringToBytes(hex_string) {
+    var bytes = new Uint8Array(Math.ceil(hex_string.length / 2));
+    for (var i = 0; i < bytes.length; i++) {
+      bytes[i] = parseInt(hex_string.substr(i * 2, 2), 16);
+    }
+    return bytes;
+  }
+
+  function rcm_h200_decoder(input) {
+    var bytes = hexStringToBytes(input);
+    var data = {};
+    data.raw = input;
+
+    if (data.raw.length == 22 || data.raw.length == 26) {
+      let meter_volume = ((bytes[3]&0b111)<<24 | bytes[2]<<16 | bytes[1]<<8 | bytes[0]);
+      let meter_unit = decodeUnits(bytes[4] & 0xF);
+      let meter_multiplier = decodeMultiplier(bytes[4] >> 4);
+      //data.meterVolume = meter_volume * meter_multiplier + " " + meter_unit;
+      data.meterVolume = meter_volume * meter_multiplier;
+      data.lifetimeSemester = (bytes[3]>>3) + " semester(s)";
+      //data.medium = decodeMedium(bytes[4] & 0xF);
+      data.medium = decodeMedium(bytes[4] & 0xF) + " " + meter_unit;
+      data.meterSerialNumber = ((bytes[8]&0b111)<<24 | bytes[7]<<16 | bytes[6]<<8 | bytes[5]);
+      data.actualityDuration = getActualityDuration(bytes[10]);
+      data.meterNoResponse = ((bytes[8]>>3)& 0x01)== 1;
+      data.meterEcoFrameError = ((bytes[8]>>4)& 0x01)== 1;
+      data.meterRollError = ((bytes[8]>>5)& 0x01)== 1;
+      data.brokenPipe = ((bytes[8]>>6)& 0x01)== 1;
+      data.lowBattery = ((bytes[8]>>7)& 0x01)== 1;
+      data.backflow = ((bytes[9])& 0x01)== 1;
+      data.continuousFlow = ((bytes[9]>>1)& 0x01)== 1;
+      data.noUsage = ((bytes[9]>>2)& 0x01)== 1;
+      data.linkError = ((bytes[9]>>3)& 0x01)== 1;
+
+      if (data.raw.length == 26) {
+        var keydate = ((bytes[12]<<8) | bytes[11]);
+        keydate_day = keydate & 0x1f;
+        keydate_month = (keydate & 0xf00) >> 8;
+        keydate_year = ((keydate & 0xe0) >> 5) + ((keydate & 0xf000) >> 9);
+        data.keyDate = "" + keydate_day + "." + keydate_month + "." + keydate_year;
+      }
+    }
+
+    return data;
+  }
+
+  var payload = Buffer.from(input.bytes).toString('hex');
+  var decoded = rcm_h200_decoder(payload);
+  return {
+    data: decoded,
+    warnings: [],
+    errors: []
+  };
+}
+
+/**
+ * @typedef {Object} EncodedDownlink
+ * @property {number[]} bytes - Array of bytes represented as numbers as it will be sent to the device
+ * @property {number} fPort - The Port Field on which the downlink must be sent
+ * @property {string[]} errors - A list of error messages while encoding the downlink object
+ * @property {string[]} warnings - A list of warning messages that do not prevent the driver from encoding the downlink object
+ */
+
+/**
+ * Downlink encode
+ * @param {Object} input - An object provided by the IoT Flow framework
+ * @param {Object} input.data - The higher-level object representing your downlink
+ * @returns {EncodedDownlink} The encoded object
+ */
+function encodeDownlink(input) {}
+
+
+/**
+ * @typedef {Object} DecodedDownlink
+ * @property {Object} data - The open JavaScript object representing the decoded downlink payload when no errors occurred
+ * @property {string[]} errors - A list of error messages while decoding the downlink payload
+ * @property {string[]} warnings - A list of warning messages that do not prevent the driver from decoding the downlink payload
+ */
+
+/**
+ * Downlink decode
+ * @param {Object} input - An object provided by the IoT Flow framework
+ * @param {number[]} input.bytes - Array of bytes represented as numbers as it will be sent to the device
+ * @param {number} input.fPort - The Port Field on which the downlink must be sent
+ * @param {Date} input.recvTime - The uplink message time computed by the IoT Flow framework
+ * @returns {DecodedDownlink} The decoded object
+ */
+function decodeDownlink(input) {}
+  
+function decodeUplink(input) {
+  function decodeMedium(code) {
+    if(code<5 && code >2){
+      code=code-3;
+    }else if(code<7 && code >4){
+      code=code-5;
+    }
+    if(code===0){
+      return "water";
+    }
+    if(code===1){
+      return "warm water"; 
+    }
+    if(code===2){
+      return "gas";
+    }
+    return "unknown";
+  }
+
+  function decodeUnits(code) {
+    if(code < 3 ){
+      return "m3";
+    }else if(code < 5 ){
+      return "galons";
+    }else if(code < 7 ){
+      return "feet3";
+    }else{
+      return "unknown";
+    }
+  }
+
+  function decodeMultiplier(code){
+    if(code == 0){
+      return 0.001;
+    }
+    if(code == 1){
+      return 0.01;
+    }
+    if(code == 2){
+      return 0.1;
+    }
+    if(code == 3){
+      return 1;
+    }
+    if(code == 4){
+      return 10;
+    }
+    return "unknown";
+  }
+
+  function getActualityDuration(input) {
+    var duration = "";
+    if(input < 0 || input > 255){
+      duration = "unknown";
+    }
+    else if(input <= 59) {
+      duration = input + " minutes";
+    }
+    else if(input > 59 && input < 152) {
+      var durationMin = (((input-60)*15)%60);
+      var durationHour = Math.floor((((input - 60) * 15))/60)+1;
+      duration = durationHour + "h " + durationMin +"m";
+    }
+    else if(152 <= input && input < 200){
+      var durationDays = input - 152+1;
+      duration = durationDays + " days";
+    }
+    else if(200 <= input && input < 245){
+      var durationWeeks = input - 200 + 7;
+      duration = durationWeeks + " weeks";
+    }
+    else if(245<= input){
+      var durationYear = 1;
+      duration = "more than " + durationYear + " years";
+    }
+    else {
+      duration = "unknown";
+    }
+    return duration;
+  }
+
+  function hexStringToBytes(hex_string) {
+    var bytes = new Uint8Array(Math.ceil(hex_string.length / 2));
+    for (var i = 0; i < bytes.length; i++) {
+      bytes[i] = parseInt(hex_string.substr(i * 2, 2), 16);
+    }
+    return bytes;
+  }
+
+  function rcm_h200_decoder(input) {
+    var bytes = hexStringToBytes(input);
+    var data = {};
+    data.raw = input;
+
+    if (data.raw.length == 22 || data.raw.length == 26) {
+      let meter_volume = ((bytes[3]&0b111)<<24 | bytes[2]<<16 | bytes[1]<<8 | bytes[0]);
+      let meter_unit = decodeUnits(bytes[4] & 0xF);
+      let meter_multiplier = decodeMultiplier(bytes[4] >> 4);
+      data.meterVolume = meter_volume * meter_multiplier + " " + meter_unit;
+      data.lifetimeSemester = (bytes[3]>>3) + " semester(s)";
+      data.medium = decodeMedium(bytes[4] & 0xF);
+      data.meterSerialNumber = ((bytes[8]&0b111)<<24 | bytes[7]<<16 | bytes[6]<<8 | bytes[5]);
+      data.actualityDuration = getActualityDuration(bytes[10]);
+      data.meterNoResponse = ((bytes[8]>>3)& 0x01)== 1;
+      data.meterEcoFrameError = ((bytes[8]>>4)& 0x01)== 1;
+      data.meterRollError = ((bytes[8]>>5)& 0x01)== 1;
+      data.brokenPipe = ((bytes[8]>>6)& 0x01)== 1;
+      data.lowBattery = ((bytes[8]>>7)& 0x01)== 1;
+      data.backflow = ((bytes[9])& 0x01)== 1;
+      data.continuousFlow = ((bytes[9]>>1)& 0x01)== 1;
+      data.noUsage = ((bytes[9]>>2)& 0x01)== 1;
+      data.linkError = ((bytes[9]>>3)& 0x01)== 1;
+
+      if (data.raw.length == 26) {
+        var keydate = ((bytes[12]<<8) | bytes[11]);
+        keydate_day = keydate & 0x1f;
+        keydate_month = (keydate & 0xf00) >> 8;
+        keydate_year = ((keydate & 0xe0) >> 5) + ((keydate & 0xf000) >> 9);
+        data.keyDate = "" + keydate_day + "." + keydate_month + "." + keydate_year;
+      }
+    }
+
+    return data;
+  }
+
+  var payload = Buffer.from(input.bytes).toString('hex');
+  var decoded = rcm_h200_decoder(payload);
+  return {
+    data: decoded,
+    warnings: [],
+    errors: []
+  };
+}

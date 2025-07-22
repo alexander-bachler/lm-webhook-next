@@ -1,0 +1,78 @@
+[
+  {
+    "deviceId": "70B3D5B6F8058151",
+    "deviceEUI": "70B3D5B6F8058151",
+    "name": "G47_Wasserzähler",
+    "description": "Integra Topas Sonic Wasserzähler",
+    "decoder": "integra-topas-sonic",
+    "manufacturer": "Integra",
+    "model": "Topas Sonic",
+    "location": "Wien, Österreich",
+    "tags": [
+      "wasser",
+      "zähler",
+      "ultraschall"
+    ],
+    "active": true,
+    "lastActivity": "2025-07-18T23:11:15.369Z",
+    "createdAt": "2025-07-18T23:11:15.369Z",
+    "updatedAt": "2025-07-18T23:30:34.016Z"
+  },
+  {
+    "deviceId": "70B3D538780200AD",
+    "deviceEUI": "70B3D538780200AD",
+    "name": "G47_Gaszähler",
+    "description": "RCM H200 Gaszähler",
+    "decoder": "h200",
+    "manufacturer": "GWF",
+    "model": "RCM H200",
+    "location": "Wien, Österreich",
+    "tags": [
+      "gas",
+      "zähler",
+      "ultraschall"
+    ],
+    "active": true,
+    "lastActivity": "2025-07-18T23:11:15.370Z",
+    "createdAt": "2025-07-18T23:11:15.370Z",
+    "updatedAt": "2025-07-18T23:11:15.370Z"
+  },
+  {
+    "deviceId": "0080E1150589E62E",
+    "deviceEUI": "0080E1150589E62E",
+    "name": "LORA/Generic_0080E115",
+    "description": "Auto-generated device from webhook data",
+    "decoder": "harvy2",
+    "manufacturer": "Dezem",
+    "model": "Harvy2",
+    "location": "48.2334, 16.3598",
+    "tags": [
+      "auto-generated",
+      "webhook",
+      "lora/generic"
+    ],
+    "active": true,
+    "lastActivity": "2025-07-20T20:05:37.200Z",
+    "createdAt": "2025-07-20T20:05:37.200Z",
+    "updatedAt": "2025-07-20T20:15:11.829Z"
+  },
+  {
+    "deviceId": "0080E1150589B443",
+    "deviceEUI": "0080E1150589B443",
+    "name": "DEZEM/HARVY2_0080E115",
+    "description": "Auto-generated device from webhook data",
+    "decoder": "harvy2",
+    "manufacturer": "Dezem",
+    "model": "Harvy2",
+    "location": "48.2334, 16.3598",
+    "tags": [
+      "auto-generated",
+      "webhook",
+      "dezem/harvy2"
+    ],
+    "active": true,
+    "lastActivity": "2025-07-20T20:05:45.265Z",
+    "createdAt": "2025-07-20T20:05:45.265Z",
+    "updatedAt": "2025-07-20T20:28:46.392Z"
+  }
+]

@@ -1,0 +1,154 @@
+// Bernhardt
+// INTEGRA Metering
+// Topas Sonic DN25 L175
+// integra-topas-sonic
+// 
+function decodeUplink(input) {
+return decoderTTN(input.bytes,0);
+}
+function decodeBCD(digits, bcd) {
+ var sign = 1;
+ if (bcd[digits/2 - 1] >> 4 > 9) {
+ bcd[digits/2 - 1] &= 0b00001111;
+ sign = -1;
+ }
+ var val = 0;
+ for (var i = 0; i < digits / 2; i++) {
+ val += ((bcd[i] & 0x0f) + (((bcd[i] & 0xf0) >> 4) * 10)) * Math.pow(100, i);
+ }
+ return parseInt(sign*val);
+}
+function manId2ascii(idhex) {
+ return (String.fromCharCode((idhex >> 10) + 64) + String.fromCharCode(((idhex >> 5) & 0x1f) + 64) 
++ String.fromCharCode((idhex & 0x1f) + 64)).toUpperCase();
+}
+function readUInt16LE(bytes){
+ return (0xFFFF & (bytes[1] << 8 | bytes[0]));
+}
+function readUInt32LE(bytes){
+ return (0xFFFFFFFF & (bytes[3] << 24 | bytes[2] << 16 | bytes[1] << 8 | bytes[0]));
+}
+function readInt16LE(bytes){
+ var res = readUInt16LE(bytes);
+ return res > 0x7FFF ? res - 0x10000 : res;
+}
+function readInt32LE(bytes){
+ var res = readUInt32LE(bytes);
+ return res > 0x7FFFFFFF ? res - 0x100000000 : res;
+}
+function decodeTopasErrors(bytes){
+var errors = [];
+if (bytes & 0x0002) errors.push("E2 Luft in Leitung");
+if (bytes & 0x0004) errors.push("E3 Burst");
+if (bytes & 0x0008) errors.push("E4 Leckage");
+if (bytes & 0x0010) errors.push("E5 Frost");
+if (bytes & 0x0020) errors.push("E6 Hitze");
+if (bytes & 0x0040) errors.push("E7 Over temperature");
+if (bytes & 0x0080) errors.push("E8 Kein Durchfluss");
+if (bytes & 0x0100) errors.push("Battery Low");
+if (bytes & 0x0200) errors.push("Reverse Flow");
+if (bytes & 0x0400) errors.push("Overload");
+if (bytes & 0x0800) errors.push("Leer");
+if (bytes & 0x1000) errors.push("Limit Min Wat. Temp (current)");
+if (bytes & 0x2000) errors.push("Limit Max Wat Temp (current)");
+if (bytes & 0x4000) errors.push("Limit Min Amb. Temp (current)");
+if (bytes & 0x8000) errors.push("Limit Max Amb Temp (current)");
+return errors;
+}
+// 29-44-25B4-58291510-10-07-7A-01-10-0020-0413AA000D0084101318000000025AFE0002FD17800802FD74A216
+function decodeTopasHeader(bytes){
+ return {
+ id: decodeBCD(8, bytes.slice(4)),
+ man: manId2ascii(readUInt16LE(bytes.slice(2))),
+ gen: bytes[8], // 0x10
+ med: bytes[9], // 7 water
+ //crc: 2 bytes
+ ci: bytes[10], // muss 7A
+ acc: bytes[11], // Access
+ sts: bytes[12], // Fehler
+ conf: readUInt16LE(bytes.slice(13)) // ConfWord: EncryptionMode: 0, CounOfBlocks: 0, Synchronous: True sollte immer 0x0020
+ }
+}
+// Inhalt und Reihenfolge sind festgelegt
+// 0413-AA000D00 841013-18000000 025AFE0002FD17800802FD74A216
+function decodeTopasValues(bytes){
+ var values = {};
+ if (bytes[0] === 0x04 && bytes[1] === 0x13){
+ values.volume = readInt32LE(bytes.slice(2)) / 1e3;
+ }
+ if (bytes[6] === 0x84 && bytes[8] === 0x13){
+ values.reverseVolume = readInt32LE(bytes.slice(9)) / 1e3;
+ }
+ if (bytes[13] === 0x02 && bytes[14] === 0x5A){
+ values.waterTemperature = readInt16LE(bytes.slice(15)) / 10;
+ }
+ if (bytes[17] === 0x02 && bytes[19] === 0x17){
+ values.errorCode = readUInt16LE(bytes.slice(20));
+ 
+ values.errors = decodeTopasErrors(values.errorCode);
+ }
+ if (bytes[22] === 0x02 && bytes[24] === 0x74){
+ values.battery = readUInt16LE(bytes.slice(25));
+ }
+ return values;
+}
+// OBIS --> Identifikationsnummer DIN 43863-5 
+function getMeterID(header){
+ var sparte = "X";
+ if (header.med === 7){ // kaltwasser medium=7 --> 8 und Warmwasser 6 --> 9 
+ sparte = "8";
+ } else if (header.med === 6){
+ sparte = "9"
+ }
+ return sparte + header.man + header.gen.toString(10).padStart(2, '0') + 
+header.id.toString(10).padStart(8, '0');
+}
+function decoderTTN (bytes, meta){
+ // input.bytes übergeben
+ var decoded = {
+ data: {},
+ warnings: [],
+ errors: []
+ };
+ 
+ if (bytes[0] === bytes.length -1 && bytes[1] === 0x44 ){ // länge und cfield prüfen
+ var header = decodeTopasHeader(bytes);
+ if (header.ci === 0x7A && header.conf === 0x2000){
+ decoded.data = decodeTopasValues(bytes.slice(15));
+ decoded.data.header = header;
+ decoded.data.meter_id = getMeterID(header);
+ 
+ } else {
+ decoded.errors.push("Application Payload Error");
+ }
+ } else {
+ decoded.errors.push("payload length failure or unknown CI Field");
+ }
+ return decoded;
+}
+function decoderNiota (buffer, meta){
+const bytes = Buffer.from(buffer, 'hex');
+ var decoded = {
+ meta: {
+ tags: null
+ },
+ value: {}
+ };
+ if (bytes[0] === bytes.length -1 && bytes[1] === 0x44 ){ // länge und cfield prüfen
+ 
+ var header = decodeTopasHeader(bytes);
+ if (header.ci === 0x7A && header.conf === 0x2000){
+ decoded.value = decodeTopasValues(bytes.slice(15));
+ decoded.value.header = header;
+ decoded.meta.tags = getMeterID(header);
+ decoded.value.meter_id = decoded.meta.tags;
+ 
+ } else {
+ decoded.value.error = "Application Payload Error";
+ }
+ } else {
+ decoded.value.error = "payload length failure or unknown CI Field";
+ }
+ return decoded;
+ 
+}
