@@ -55,8 +55,8 @@ function executeDecoder(decoderCode: string, payload: string, fPort?: number) {
     const result = script.runInNewContext(context, { timeout: 5000 });
     
     // Prüfe ob decodeUplink Funktion aufgerufen wurde
-    if (typeof context.decodeUplink === 'function') {
-      return context.decodeUplink(input);
+    if (typeof (context as any).decodeUplink === 'function') {
+      return (context as any).decodeUplink(input);
     }
     
     return result || { data: {}, errors: [], warnings: [] };
@@ -65,7 +65,7 @@ function executeDecoder(decoderCode: string, payload: string, fPort?: number) {
     console.error('Fehler beim Ausführen des Decoders:', error);
     return {
       data: {},
-      errors: [error.message],
+      errors: [error instanceof Error ? error.message : String(error)],
       warnings: []
     };
   }
@@ -200,7 +200,7 @@ function decodeIntegraTopasSonic(payload: string) {
   } catch (error) {
     return {
       data: {},
-      errors: [error.message],
+      errors: [error instanceof Error ? error.message : String(error)],
       warnings: []
     };
   }
@@ -266,7 +266,7 @@ function decodeH200(payload: string) {
       const meter_unit = decodeUnits(bytes[4] & 0xF);
       const meter_multiplier = decodeMultiplier(bytes[4] >> 4);
       
-      data.meterVolume = meter_volume * meter_multiplier;
+      data.meterVolume = meter_volume * (typeof meter_multiplier === 'number' ? meter_multiplier : 1);
       data.lifetimeSemester = (bytes[3] >> 3) + " semester(s)";
       data.medium = decodeMedium(bytes[4] & 0xF) + " " + meter_unit;
       data.meterSerialNumber = ((bytes[8] & 0b111) << 24 | bytes[7] << 16 | bytes[6] << 8 | bytes[5]);
@@ -299,7 +299,7 @@ function decodeH200(payload: string) {
   } catch (error) {
     return {
       data: {},
-      errors: [error.message],
+      errors: [error instanceof Error ? error.message : String(error)],
       warnings: []
     };
   }
@@ -373,9 +373,9 @@ export async function POST(request: NextRequest) {
               raw_hex: payload,
               raw_bytes: Array.from(Buffer.from(payload, 'hex')),
               length: payload.length / 2,
-              error: `Harvy2 Dekodierungsfehler: ${error.message}`
+              error: `Harvy2 Dekodierungsfehler: ${error instanceof Error ? error.message : String(error)}`
             },
-            errors: [`Harvy2 Dekodierungsfehler: ${error.message}`],
+            errors: [`Harvy2 Dekodierungsfehler: ${error instanceof Error ? error.message : String(error)}`],
             warnings: []
           };
         }

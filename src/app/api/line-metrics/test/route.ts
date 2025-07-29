@@ -4,17 +4,17 @@ import LineMetricsClient from '@/lib/line-metrics-client';
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { apiKey, projectId } = body;
+    const { clientId, clientSecret, projectId } = body;
 
-    if (!apiKey || !projectId) {
+    if (!clientId || !clientSecret || !projectId) {
       return NextResponse.json({
         success: false,
-        error: 'API Key und Project ID sind erforderlich'
+        error: 'Client ID, Client Secret und Project ID sind erforderlich'
       }, { status: 400 });
     }
 
     const lineMetricsClient = new LineMetricsClient();
-    const result: any = await lineMetricsClient.testConnection(apiKey, projectId);
+    const result: any = await lineMetricsClient.testConnection(clientId, clientSecret, projectId);
 
     if (result.success) {
       return NextResponse.json({

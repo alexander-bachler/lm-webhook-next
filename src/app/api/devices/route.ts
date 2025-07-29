@@ -20,6 +20,16 @@ interface Device {
   lastActivity: string;
   createdAt: string;
   updatedAt: string;
+  // LineMetrics Integration
+  lineMetrics?: {
+    enabled: boolean;
+    clientId?: string;
+    clientSecret?: string;
+    projectId?: string;
+    dataPoints?: {
+      [key: string]: string; // decoder field -> LineMetrics data point ID
+    };
+  };
 }
 
 // Lade Devices aus JSON-Datei (DeviceManager-Format)
@@ -43,7 +53,14 @@ async function loadDevices(): Promise<Device[]> {
         active: device.active !== false,
         lastActivity: device.lastSeen || device.lastActivity || new Date().toISOString(),
         createdAt: device.createdAt,
-        updatedAt: device.updatedAt
+        updatedAt: device.updatedAt,
+        lineMetrics: device.lineMetrics || {
+          enabled: false,
+          clientId: '',
+          clientSecret: '',
+          projectId: '',
+          dataPoints: {}
+        }
       }));
     }
     
@@ -84,7 +101,14 @@ async function saveDevices(devices: Device[]): Promise<void> {
         updatedAt: device.updatedAt,
         lastSeen: device.lastActivity,
         dataCount: 0,
-        metadata: {}
+        metadata: {},
+        lineMetrics: device.lineMetrics || {
+          enabled: false,
+          clientId: '',
+          clientSecret: '',
+          projectId: '',
+          dataPoints: {}
+        }
       };
     });
     
@@ -153,7 +177,14 @@ export async function POST(request: NextRequest) {
       active: body.active !== undefined ? body.active : true,
       lastActivity: new Date().toISOString(),
       createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
+      updatedAt: new Date().toISOString(),
+      lineMetrics: body.lineMetrics || {
+        enabled: false,
+        clientId: '',
+        clientSecret: '',
+        projectId: '',
+        dataPoints: {}
+      }
     };
     
     devices.push(newDevice);
@@ -204,6 +235,13 @@ export async function PUT(request: NextRequest) {
       location: body.location || devices[deviceIndex].location,
       tags: body.tags || devices[deviceIndex].tags,
       active: body.active !== undefined ? body.active : devices[deviceIndex].active,
+      lineMetrics: body.lineMetrics || devices[deviceIndex].lineMetrics || {
+        enabled: false,
+        clientId: '',
+        clientSecret: '',
+        projectId: '',
+        dataPoints: {}
+      },
       updatedAt: new Date().toISOString()
     };
     

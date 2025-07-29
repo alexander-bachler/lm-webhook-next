@@ -7,7 +7,7 @@ class LoRaWANDecoder {
    */
   static getRepositoryDecoders() {
     try {
-      const deviceManager = require('./lib/device-manager');
+      const deviceManager = require('./device-manager');
       return deviceManager.getAvailableDecoders();
     } catch (error) {
       logger.debug('Repository-Decoder nicht verfügbar:', error.message);

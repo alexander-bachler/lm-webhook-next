@@ -2,14 +2,51 @@ const logger = require('./logger');
 
 class LineMetricsClient {
   constructor() {
-    this.baseUrl = 'https://api.linemetrics.com';
+    this.baseUrl = 'https://rest-api.linemetrics.com';
     this.version = 'v1';
+  }
+
+  /**
+   * Get OAuth access token using client credentials
+   * @param {string} clientId - LineMetrics Client ID
+   * @param {string} clientSecret - LineMetrics Client Secret
+   * @returns {Promise<string>} Access token
+   */
+  async getAccessToken(clientId, clientSecret) {
+    try {
+      const response = await fetch(`${this.baseUrl}/oauth/access_token`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: new URLSearchParams({
+          client_id: clientId,
+          client_secret: clientSecret,
+          grant_type: 'client_credentials'
+        }).toString(),
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded'
+        }
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`OAuth token request failed: ${response.status} - ${errorText}`);
+      }
+
+      const tokenData = await response.json();
+      return tokenData.access_token;
+    } catch (error) {
+      logger.error(`Error getting access token: ${error.message}`);
+      throw error;
+    }
   }
 
   /**
    * Send data to LineMetrics Cloud
    * @param {Object} config - LineMetrics configuration
-   * @param {string} config.apiKey - LineMetrics API Key
+   * @param {string} config.clientId - LineMetrics Client ID
+   * @param {string} config.clientSecret - LineMetrics Client Secret
    * @param {string} config.projectId - LineMetrics Project ID
    * @param {Object} config.dataPoints - Mapping of decoder fields to data point IDs
    * @param {Object} decodedData - Decoded webhook data
@@ -19,7 +56,7 @@ class LineMetricsClient {
    */
   async sendData(config, decodedData, deviceId, timestamp) {
     try {
-      if (!config.enabled || !config.apiKey || !config.projectId) {
+      if (!config.enabled || !config.clientId || !config.clientSecret || !config.projectId) {
         logger.info('LineMetrics integration not configured or disabled');
         return { success: false, message: 'LineMetrics not configured' };
       }
@@ -43,22 +80,111 @@ class LineMetricsClient {
         return { success: false, message: 'No valid measurements' };
       }
 
-      const payload = {
-        measurements: measurements
-      };
+      // Get OAuth access token
+      const accessToken = await this.getAccessToken(config.clientId, config.clientSecret);
 
-      const response = await fetch(`${this.baseUrl}/${this.version}/projects/${config.projectId}/measurements`, {
+      // LineMetrics verwendet einen anderen Endpunkt für Daten
+      // POST /v2/data/{CUSTOM_KEY}/{ALIAS}
+      // CUSTOM_KEY = Asset ID, ALIAS = Data Point ID
+      const dataPointId = Object.values(config.dataPoints)[0]; // Verwende das erste Data Point
+      if (!dataPointId) {
+        return {
+          success: false,
+          error: 'Kein Data Point konfiguriert'
+        };
+      }
+
+      // Verwende die Project ID als CUSTOM_KEY (Asset ID)
+      // und die Data Point ID als ALIAS
+      const customKey = config.projectId; // Asset ID
+      const alias = dataPointId; // Data Point ID / Alias
+
+      // Debug: Log die verwendete Konfiguration
+      logger.info(`LineMetrics Config Debug: projectId=${config.projectId}, dataPoints=${JSON.stringify(config.dataPoints)}`);
+      logger.info(`LineMetrics URL Debug: customKey=${customKey}, alias=${alias}`);
+      logger.info(`LineMetrics Timestamp Debug: timestamp=${timestamp}`);
+
+      // Erstelle das Datenformat für LineMetrics
+      const lineMetricsData = [];
+      for (const [field, dataPointId] of Object.entries(config.dataPoints)) {
+        if (decodedData[field] !== undefined && decodedData[field] !== null) {
+          // Standardisiere das Datenformat
+          let value = decodedData[field];
+          
+          // Konvertiere zu Number falls nötig
+          if (typeof value === 'string') {
+            // Entferne Leerzeichen und ersetze Kommas durch Punkte
+            value = value.trim().replace(',', '.');
+            value = parseFloat(value);
+          }
+          
+          // Stelle sicher, dass es eine gültige Zahl ist
+          if (isNaN(value)) {
+            logger.warn(`Invalid value for field ${field}: ${decodedData[field]}`);
+            continue;
+          }
+          
+          // Stelle sicher, dass es eine endliche Zahl ist
+          if (!isFinite(value)) {
+            logger.warn(`Infinite value for field ${field}: ${decodedData[field]}`);
+            continue;
+          }
+          
+          // Behalte volle Genauigkeit für LineMetrics API
+          // Verwende 3 Dezimalstellen für bessere Lesbarkeit in LineMetrics
+          value = value.toFixed(3); // 3 Dezimalstellen für optimale Darstellung
+          
+          const dataPoint = {
+            val: value
+          };
+          
+          // Füge Timestamp hinzu, falls verfügbar
+          if (timestamp) {
+            dataPoint.ts = new Date(timestamp).getTime();
+          }
+          
+          lineMetricsData.push(dataPoint);
+          
+          // Debug: Log das formatierte Datenformat
+          logger.info(`LineMetrics Data Format: field=${field}, original=${decodedData[field]}, formatted=${value}, type=${typeof value}`);
+        }
+      }
+
+      if (lineMetricsData.length === 0) {
+        return {
+          success: false,
+          error: 'Keine gültigen Daten zum Senden'
+        };
+      }
+      
+      // Debug: Log die gesendeten Daten
+      logger.info(`LineMetrics Data Debug: ${JSON.stringify(lineMetricsData)}`);
+      logger.info(`LineMetrics Data Points Count: ${lineMetricsData.length}`);
+      logger.info(`LineMetrics Timestamp for each data point: ${lineMetricsData.map(dp => dp.ts).join(', ')}`);
+      logger.info(`LineMetrics Raw Timestamp: ${timestamp}`);
+      logger.info(`LineMetrics Converted Timestamp: ${timestamp ? new Date(timestamp).getTime() : 'null'}`);
+
+      const response = await fetch(`${this.baseUrl}/v2/data/${customKey}/${alias}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${config.apiKey}`
+          'Authorization': `Bearer ${accessToken}`
         },
-        body: JSON.stringify(payload)
+        body: JSON.stringify(lineMetricsData)
       });
 
       if (!response.ok) {
         const errorText = await response.text();
         logger.error(`LineMetrics API error: ${response.status} - ${errorText}`);
+        logger.error(`Sent data: ${JSON.stringify(lineMetricsData)}`);
+        logger.error(`Custom Key (Asset ID): ${customKey}`);
+        logger.error(`Alias (Data Point ID): ${alias}`);
+        logger.error(`LineMetrics API URL: ${this.baseUrl}/v2/data/${customKey}/${alias}`);
+        logger.error(`LineMetrics API Method: POST`);
+        logger.error(`LineMetrics API Headers: ${JSON.stringify({
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${accessToken}`
+        })}`);
         return {
           success: false,
           error: `LineMetrics API error: ${response.status}`,
@@ -86,16 +212,22 @@ class LineMetricsClient {
 
   /**
    * Test LineMetrics connection
-   * @param {string} apiKey - LineMetrics API Key
+   * @param {string} clientId - LineMetrics Client ID
+   * @param {string} clientSecret - LineMetrics Client Secret
    * @param {string} projectId - LineMetrics Project ID
    * @returns {Promise<Object>} Test result
    */
-  async testConnection(apiKey, projectId) {
+  async testConnection(clientId, clientSecret, projectId) {
     try {
-      const response = await fetch(`${this.baseUrl}/${this.version}/projects/${projectId}`, {
+      // Get OAuth access token
+      const accessToken = await this.getAccessToken(clientId, clientSecret);
+
+      // Teste die Verbindung durch einen einfachen API-Call
+      // LineMetrics hat möglicherweise einen anderen Endpunkt für Tests
+      const response = await fetch(`${this.baseUrl}/v2/data/test`, {
         method: 'GET',
         headers: {
-          'Authorization': `Bearer ${apiKey}`
+          'Authorization': `Bearer ${accessToken}`
         }
       });
 
@@ -124,16 +256,21 @@ class LineMetricsClient {
 
   /**
    * Get available data points for a project
-   * @param {string} apiKey - LineMetrics API Key
+   * @param {string} clientId - LineMetrics Client ID
+   * @param {string} clientSecret - LineMetrics Client Secret
    * @param {string} projectId - LineMetrics Project ID
    * @returns {Promise<Object>} Data points list
    */
-  async getDataPoints(apiKey, projectId) {
+  async getDataPoints(clientId, clientSecret, projectId) {
     try {
-      const response = await fetch(`${this.baseUrl}/${this.version}/projects/${projectId}/data_points`, {
+      // Get OAuth access token
+      const accessToken = await this.getAccessToken(clientId, clientSecret);
+
+      // LineMetrics Data Points Endpunkt
+      const response = await fetch(`${this.baseUrl}/v2/data_points`, {
         method: 'GET',
         headers: {
-          'Authorization': `Bearer ${apiKey}`
+          'Authorization': `Bearer ${accessToken}`
         }
       });
 

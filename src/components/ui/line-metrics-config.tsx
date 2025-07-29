@@ -26,13 +26,15 @@ import {
 
 interface LineMetricsConfigProps {
   enabled: boolean;
-  apiKey: string;
+  clientId: string;
+  clientSecret: string;
   projectId: string;
   dataPoints: { [key: string]: string };
   decoder: string;
   onConfigChange: (config: {
     enabled: boolean;
-    apiKey: string;
+    clientId: string;
+    clientSecret: string;
     projectId: string;
     dataPoints: { [key: string]: string };
   }) => void;
@@ -118,7 +120,8 @@ const DECODER_FIELDS: { [key: string]: string[] } = {
 
 export function LineMetricsConfig({
   enabled,
-  apiKey,
+  clientId,
+  clientSecret,
   projectId,
   dataPoints,
   decoder,
@@ -126,7 +129,8 @@ export function LineMetricsConfig({
 }: LineMetricsConfigProps) {
   const [localConfig, setLocalConfig] = useState({
     enabled,
-    apiKey,
+    clientId,
+    clientSecret,
     projectId,
     dataPoints: { ...dataPoints }
   });
@@ -136,11 +140,12 @@ export function LineMetricsConfig({
   useEffect(() => {
     setLocalConfig({
       enabled,
-      apiKey,
+      clientId,
+      clientSecret,
       projectId,
       dataPoints: { ...dataPoints }
     });
-  }, [enabled, apiKey, projectId, dataPoints]);
+  }, [enabled, clientId, clientSecret, projectId, dataPoints]);
 
   const handleConfigChange = (field: string, value: boolean | string) => {
     const newConfig = {
@@ -193,10 +198,10 @@ export function LineMetricsConfig({
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Database className="h-5 w-5" />
-          LineMetrics Integration
+          LineMetrics API Integration
         </CardTitle>
         <CardDescription>
-          Konfigurieren Sie die LineMetrics Cloud-Integration für automatische Datenübertragung
+          Konfigurieren Sie die OAuth 2.0 Verbindung zu LineMetrics für automatische Datenübertragung
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
@@ -218,30 +223,44 @@ export function LineMetricsConfig({
           <>
             <Separator />
             
-            {/* API-Konfiguration */}
+            {/* OAuth 2.0 API-Konfiguration */}
             <div className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="lineMetricsApiKey" className="flex items-center gap-2">
+                <Label htmlFor="lineMetricsClientId" className="flex items-center gap-2">
                   <Key className="h-4 w-4" />
-                  API Key
+                  OAuth Client ID
                 </Label>
                 <Input
-                  id="lineMetricsApiKey"
+                  id="lineMetricsClientId"
+                  type="text"
+                  placeholder="LineMetrics OAuth Client ID eingeben"
+                  value={localConfig.clientId}
+                  onChange={(e) => handleConfigChange('clientId', e.target.value)}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="lineMetricsClientSecret" className="flex items-center gap-2">
+                  <Key className="h-4 w-4" />
+                  OAuth Client Secret
+                </Label>
+                <Input
+                  id="lineMetricsClientSecret"
                   type="password"
-                  placeholder="LineMetrics API Key eingeben"
-                  value={localConfig.apiKey}
-                  onChange={(e) => handleConfigChange('apiKey', e.target.value)}
+                  placeholder="LineMetrics OAuth Client Secret eingeben"
+                  value={localConfig.clientSecret}
+                  onChange={(e) => handleConfigChange('clientSecret', e.target.value)}
                 />
               </div>
 
               <div className="space-y-2">
                 <Label htmlFor="lineMetricsProjectId" className="flex items-center gap-2">
                   <Globe className="h-4 w-4" />
-                  Project ID
+                  Asset ID (Custom Key)
                 </Label>
                 <Input
                   id="lineMetricsProjectId"
-                  placeholder="LineMetrics Project ID eingeben"
+                  placeholder="LineMetrics Asset ID eingeben"
                   value={localConfig.projectId}
                   onChange={(e) => handleConfigChange('projectId', e.target.value)}
                 />
@@ -254,9 +273,9 @@ export function LineMetricsConfig({
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <Label className="text-base">Data Point Mapping</Label>
+                  <Label className="text-base">Data Point Mapping (Alias)</Label>
                   <p className="text-sm text-muted-foreground">
-                    Ordnen Sie Parser-Felder LineMetrics Data Points zu
+                    Ordnen Sie Parser-Felder LineMetrics Data Point Aliases zu
                   </p>
                 </div>
                 <Button
@@ -283,7 +302,7 @@ export function LineMetricsConfig({
                       </div>
                       <div className="flex items-center gap-2">
                         <Input
-                          placeholder="LineMetrics Data Point ID"
+                          placeholder="LineMetrics Data Point Alias"
                           value={localConfig.dataPoints[field] || ''}
                           onChange={(e) => handleDataPointChange(field, e.target.value)}
                           className="w-48"

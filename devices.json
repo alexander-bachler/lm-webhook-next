@@ -10,10 +10,19 @@
       "model": "RCM-H200",
       "image": "/images/devices/default.svg",
       "createdAt": "2025-07-18T21:04:15.547Z",
-      "updatedAt": "2025-07-21T18:15:17.267Z",
+      "updatedAt": "2025-07-29T21:19:39.792Z",
       "lastSeen": "2025-07-20T20:39:29.827Z",
       "dataCount": 0,
-      "metadata": {}
+      "metadata": {},
+      "lineMetrics": {
+        "enabled": true,
+        "clientId": "api_4192d7fa929c",
+        "clientSecret": "f6a61495a9e92acb30f7d8e1c58fb86f",
+        "projectId": "2d356681cfc44b43baac746b28e81ba3",
+        "dataPoints": {
+          "meterVolume": "wasser"
+        }
+      }
     },
     "device_1752872742706_550x5g1bx": {
       "deviceId": "device_1752872742706_550x5g1bx",
@@ -25,10 +34,19 @@
       "model": "Topas Sonic",
       "image": "/images/devices/default.svg",
       "createdAt": "2025-07-18T21:05:42.729Z",
-      "updatedAt": "2025-07-18T21:20:30.174Z",
+      "updatedAt": "2025-07-29T21:32:22.110Z",
       "lastSeen": "2025-07-20T20:39:29.827Z",
       "dataCount": 0,
-      "metadata": {}
+      "metadata": {},
+      "lineMetrics": {
+        "enabled": true,
+        "clientId": "api_4192d7fa929c",
+        "clientSecret": "f6a61495a9e92acb30f7d8e1c58fb86f",
+        "projectId": "2d356681cfc44b43baac746b28e81ba3",
+        "dataPoints": {
+          "volume": "gas"
+        }
+      }
     },
     "0080E1150589E62E": {
       "deviceId": "0080E1150589E62E",
@@ -43,7 +61,13 @@
       "updatedAt": "2025-07-20T20:45:58.899Z",
       "lastSeen": "2025-07-20T20:39:29.827Z",
       "dataCount": 0,
-      "metadata": {}
+      "metadata": {},
+      "lineMetrics": {
+        "enabled": false,
+        "apiKey": "",
+        "projectId": "",
+        "dataPoints": {}
+      }
     },
     "0080E1150589B443": {
       "deviceId": "0080E1150589B443",
@@ -58,7 +82,13 @@
       "updatedAt": "2025-07-20T20:46:02.077Z",
       "lastSeen": "2025-07-20T20:39:37.579Z",
       "dataCount": 0,
-      "metadata": {}
+      "metadata": {},
+      "lineMetrics": {
+        "enabled": false,
+        "apiKey": "",
+        "projectId": "",
+        "dataPoints": {}
+      }
     }
   },
   "decoders": {
@@ -1174,5 +1204,5 @@
       "count": 0
     }
   },
-  "lastUpdate": "2025-07-21T18:15:17.268Z"
+  "lastUpdate": "2025-07-29T21:32:22.111Z"
 }
