@@ -10,7 +10,7 @@
       "model": "RCM-H200",
       "image": "/images/devices/default.svg",
       "createdAt": "2025-07-18T21:04:15.547Z",
-      "updatedAt": "2025-07-29T21:19:39.792Z",
+      "updatedAt": "2025-07-30T20:33:41.233Z",
       "lastSeen": "2025-07-20T20:39:29.827Z",
       "dataCount": 0,
       "metadata": {},
@@ -1204,5 +1204,5 @@
       "count": 0
     }
   },
-  "lastUpdate": "2025-07-29T21:32:22.111Z"
+  "lastUpdate": "2025-07-30T20:33:41.234Z"
 }
