@@ -44,6 +44,11 @@ next-env.d.ts
 
 # logs
 logs/
+!logs/.gitkeep
+
+# runtime data (SQLite, migrated devices, WAL files)
+data/*
+!data/.gitkeep
 
 # catalyst
 .catalystrc
