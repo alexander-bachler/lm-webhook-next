@@ -1,0 +1,8 @@
+# Example: TLS termination with automatic HTTPS (Let's Encrypt).
+# Replace webhooks.example.com with your hostname, rename to Caddyfile,
+# and use with docker-compose.override.example.yml (service name: app).
+
+webhooks.example.com {
+    encode gzip
+    reverse_proxy app:3000
+}

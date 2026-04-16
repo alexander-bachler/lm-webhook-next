@@ -397,7 +397,8 @@ async function getDecodedWebhookSiteHistory(source = 'webhook.site', limit = 50,
 
         if (extractedPayload && extractedPayload.data) {
           // Finde Device und verwende Device-spezifischen Decoder
-          const deviceManager = require('./device-manager');
+          const dm = require('./device-manager');
+          const deviceManager = dm.default || dm;
           let device = null;
           
           // Versuche zuerst Device-ID zu finden

@@ -1,9 +1,9 @@
 import DeviceManager from '@/lib/device-manager';
+import { decodePayloadCore } from '@/lib/payload-decode';
 
 export function getServerBaseUrl(): string {
   return (
-    process.env.NEXT_PUBLIC_BASE_URL ||
-    `http://127.0.0.1:${process.env.PORT || 3000}`
+    process.env.NEXT_PUBLIC_BASE_URL || `http://127.0.0.1:${process.env.PORT || 3000}`
   );
 }
 
@@ -22,7 +22,7 @@ export interface DecodePayloadResult {
 }
 
 /**
- * Decode hex payload via internal /api/payload/decode route (same logic as GET /api/webhooks).
+ * Decode hex payload using the same logic as POST /api/payload/decode (in-process, no HTTP).
  */
 export async function decodePayload(
   deviceEUI: string,
@@ -30,7 +30,7 @@ export async function decodePayload(
   fPort: number | null
 ): Promise<DecodePayloadResult> {
   try {
-    const device = DeviceManager.getDeviceByEUI(deviceEUI);
+    const device = DeviceManager.getDeviceByEUI(deviceEUI) as Record<string, unknown> | null;
     let decoder = 'auto';
     const deviceType = '';
     let deviceInfo = {
@@ -41,81 +41,70 @@ export async function decodePayload(
     };
 
     if (device && device.decoder) {
-      decoder = device.decoder;
+      decoder = String(device.decoder);
       deviceInfo = {
-        name: device.name || deviceEUI,
-        manufacturer: device.manufacturer || 'Unknown',
-        model: device.model || 'Unknown',
-        decoder: device.decoder || 'auto',
+        name: String(device.name || deviceEUI),
+        manufacturer: String(device.manufacturer || 'Unknown'),
+        model: String(device.model || 'Unknown'),
+        decoder: String(device.decoder || 'auto'),
       };
     }
 
-    if (payload && payload.length > 0 && payload.length % 2 === 0) {
-      try {
-        const response = await fetch(`${getServerBaseUrl()}/api/payload/decode`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            payload,
-            decoder,
-            deviceType,
-            fPort: fPort ?? undefined,
-            deviceEUI,
-            deviceInfo,
-          }),
-        });
-
-        if (response.ok) {
-          const result = (await response.json()) as {
-            success?: boolean;
-            decoder?: string;
-            decodedData?: Record<string, unknown>;
-            warnings?: string[];
-            errors?: string[];
-            deviceInfo?: DecodePayloadResult['deviceInfo'];
-          };
-
-          const finalDeviceInfo =
-            result.deviceInfo ||
-            (device
-              ? {
-                  name: device.name,
-                  manufacturer: device.manufacturer,
-                  model: device.model,
-                  decoder: device.decoder,
-                }
-              : null);
-
-          return {
-            success: Boolean(result.success),
-            decoder: result.decoder || decoder,
-            decodedData: result.decodedData ?? null,
-            warnings: result.warnings || [],
-            errors: result.errors || [],
-            deviceInfo: finalDeviceInfo,
-          };
-        }
-      } catch (error) {
-        console.error('decodePayload fetch error:', error);
-      }
+    if (!payload || payload.length === 0 || payload.length % 2 !== 0) {
+      return {
+        success: false,
+        decoder,
+        decodedData: null,
+        warnings: [],
+        errors: ['Invalid payload or decode error'],
+        deviceInfo: device
+          ? {
+              name: String(device.name ?? deviceEUI),
+              manufacturer: String(device.manufacturer ?? 'Unknown'),
+              model: String(device.model ?? 'Unknown'),
+              decoder: String(device.decoder ?? 'auto'),
+            }
+          : null,
+      };
     }
 
-    return {
-      success: false,
+    const result = await decodePayloadCore({
+      payload,
       decoder,
-      decodedData: null,
-      warnings: [],
-      errors: ['Invalid payload or decode error'],
-      deviceInfo: device
+      deviceType,
+      fPort: fPort ?? undefined,
+      deviceEUI,
+      deviceInfo,
+    });
+
+    const fromResult = result.deviceInfo;
+    const finalDeviceInfo: DecodePayloadResult['deviceInfo'] =
+      fromResult && fromResult.name && fromResult.decoder
         ? {
-            name: device.name,
-            manufacturer: device.manufacturer,
-            model: device.model,
-            decoder: device.decoder,
+            name: String(fromResult.name),
+            manufacturer: String(fromResult.manufacturer ?? 'Unknown'),
+            model: String(fromResult.model ?? 'Unknown'),
+            decoder: String(fromResult.decoder),
           }
-        : null,
+        : device
+          ? {
+              name: String(device.name || deviceEUI),
+              manufacturer: String(device.manufacturer || 'Unknown'),
+              model: String(device.model || 'Unknown'),
+              decoder: String(device.decoder || 'auto'),
+            }
+          : null;
+
+    const errors = result.errors || [];
+    const success = errors.length === 0 && result.success;
+
+    return {
+      success,
+      decoder: result.decoder,
+      decodedData: result.decodedData ?? null,
+      warnings: result.warnings || [],
+      errors,
+      deviceInfo: finalDeviceInfo,
     };
   } catch (error) {
     console.error('decodePayload error:', error);

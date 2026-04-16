@@ -1,31 +1,17 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 import { LineMetricsConfig } from '@/components/ui/line-metrics-config';
 import { HistoricalPush } from '@/components/ui/historical-push';
-import { 
-  Plus, 
-  Edit, 
-  Trash2, 
-  Activity, 
-  Clock, 
-  Tag, 
-  MapPin, 
-  Settings,
-  AlertCircle,
-  CheckCircle2,
-  Loader2
-} from 'lucide-react';
+import { DevicesAdminGrid } from '@/components/devices/DevicesAdminGrid';
+import { Plus, AlertCircle, CheckCircle2, Loader2 } from 'lucide-react';
 
 interface Device {
   deviceId: string;
@@ -262,39 +248,6 @@ export default function DevicesPage() {
     setIsEditDialogOpen(true);
   };
 
-  const getStatusBadge = (active: boolean) => {
-    return active ? (
-      <Badge variant="default" className="bg-green-100 text-green-800">
-        <Activity className="h-3 w-3 mr-1" />
-        Aktiv
-      </Badge>
-    ) : (
-      <Badge variant="secondary">
-        <Clock className="h-3 w-3 mr-1" />
-        Inaktiv
-      </Badge>
-    );
-  };
-
-  const getActivityIcon = (active: boolean, lastActivity?: string) => {
-    if (!active) return <Clock className="h-4 w-4 text-gray-400" />;
-    
-    if (!lastActivity) return <Activity className="h-4 w-4 text-yellow-500" />;
-    
-    const lastSeen = new Date(lastActivity);
-    const now = new Date();
-    const diffHours = (now.getTime() - lastSeen.getTime()) / (1000 * 60 * 60);
-    
-    if (diffHours < 1) return <Activity className="h-4 w-4 text-green-500" />;
-    if (diffHours < 24) return <Activity className="h-4 w-4 text-yellow-500" />;
-    return <Activity className="h-4 w-4 text-red-500" />;
-  };
-
-  const getDecoderInfo = (decoderId: string) => {
-    const decoder = decoders.find(d => d.id === decoderId);
-    return decoder || { name: decoderId, manufacturer: 'Unknown', model: 'Unknown' };
-  };
-
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -342,91 +295,37 @@ export default function DevicesPage() {
         </div>
       )}
 
-      {/* Devices Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {devices.map((device) => (
-          <Card key={device.deviceId} className="hover:shadow-lg transition-shadow">
-            <CardHeader>
-              <div className="flex justify-between items-start">
-                <div>
-                  <CardTitle className="flex items-center gap-2">
-                    {getActivityIcon(device.active, device.lastActivity)}
-                    {device.name}
-                  </CardTitle>
-                  <CardDescription className="flex items-center gap-2 mt-1">
-                    <Tag className="h-3 w-3" />
-                    {device.deviceEUI || 'Keine EUI'}
-                  </CardDescription>
-                </div>
-                {getStatusBadge(device.active)}
-              </div>
-            </CardHeader>
-            
-            <CardContent className="space-y-4">
-              {/* Device Info */}
-              <div className="space-y-2">
-                {device.description && (
-                  <p className="text-sm text-gray-600">{device.description}</p>
-                )}
-                
-                <div className="flex items-center gap-2 text-sm">
-                  <Settings className="h-3 w-3 text-gray-400" />
-                  <span className="text-gray-600">
-                    {getDecoderInfo(device.decoder).manufacturer} {getDecoderInfo(device.decoder).model}
-                  </span>
-                </div>
-                
-                {device.location && (
-                  <div className="flex items-center gap-2 text-sm">
-                    <MapPin className="h-3 w-3 text-gray-400" />
-                    <span className="text-gray-600">{device.location}</span>
-                  </div>
-                )}
-                
-                {device.tags && device.tags.length > 0 && (
-                  <div className="flex flex-wrap gap-1">
-                    {device.tags.map((tag, index) => (
-                      <Badge key={index} variant="outline" className="text-xs">
-                        {tag}
-                      </Badge>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              <Separator />
-
-              {/* LineMetrics Status */}
-              <div className="flex items-center justify-between">
-                <span className="text-sm font-medium">LineMetrics</span>
-                <Badge variant={device.lineMetrics?.enabled ? "default" : "secondary"}>
-                  {device.lineMetrics?.enabled ? 'Aktiviert' : 'Deaktiviert'}
-                </Badge>
-              </div>
-
-              {/* Actions */}
-              <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => openEditDialog(device)}
-                  className="flex-1"
-                >
-                  <Edit className="h-3 w-3 mr-1" />
-                  Bearbeiten
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handleDeleteDevice(device.deviceId)}
-                  className="text-red-600 hover:text-red-700"
-                >
-                  <Trash2 className="h-3 w-3" />
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
+      <div className="space-y-2">
+        <h2 className="text-xl font-semibold">Device directory</h2>
+        <p className="text-sm text-muted-foreground">
+          Search, export/import JSON, and edit LineMetrics from the dialog.
+        </p>
+        <DevicesAdminGrid
+          onEdit={(row) =>
+            openEditDialog({
+              deviceId: row.deviceId,
+              deviceEUI: row.deviceEUI,
+              name: row.name,
+              description: row.description ?? '',
+              decoder: row.decoder,
+              manufacturer: row.manufacturer ?? '',
+              model: row.model ?? '',
+              location: row.location ?? '',
+              tags: row.tags ?? [],
+              active: row.active,
+              lastActivity: row.lastActivity,
+              createdAt: row.createdAt,
+              updatedAt: row.updatedAt,
+              lineMetrics: row.lineMetrics ?? {
+                enabled: false,
+                clientId: '',
+                clientSecret: '',
+                projectId: '',
+                dataPoints: {},
+              },
+            })
+          }
+        />
       </div>
 
       {/* Create Device Dialog */}
@@ -734,13 +633,25 @@ export default function DevicesPage() {
             </div>
           </div>
 
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
-              Abbrechen
+          <DialogFooter className="flex flex-wrap gap-2 justify-between">
+            <Button
+              variant="destructive"
+              type="button"
+              onClick={() => {
+                void handleDeleteDevice(formData.deviceId);
+                setIsEditDialogOpen(false);
+              }}
+            >
+              Archive
             </Button>
-            <Button onClick={handleUpdateDevice} disabled={!formData.deviceId || !formData.name}>
-              Änderungen speichern
-            </Button>
+            <div className="flex gap-2 ml-auto">
+              <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
+                Abbrechen
+              </Button>
+              <Button onClick={handleUpdateDevice} disabled={!formData.deviceId || !formData.name}>
+                Änderungen speichern
+              </Button>
+            </div>
           </DialogFooter>
         </DialogContent>
       </Dialog>

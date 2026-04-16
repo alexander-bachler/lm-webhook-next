@@ -1,6 +1,5 @@
-import Database from 'better-sqlite3';
 import { randomUUID } from 'crypto';
-import { getWebhookDbPath } from './data-paths.js';
+import { getAppDatabase, closeAppDatabase } from './app-db';
 
 export type ProcessingStatus = 'ok' | 'partial' | 'error';
 
@@ -26,44 +25,27 @@ export interface WebhookQueryOptions {
   deviceEui?: string;
 }
 
-let dbInstance: Database.Database | null = null;
-
-function getDb(): Database.Database {
-  if (dbInstance) {
-    return dbInstance;
-  }
-  const file = getWebhookDbPath();
-  const db = new Database(file);
-  db.pragma('journal_mode = WAL');
-  db.exec(`
-    CREATE TABLE IF NOT EXISTS webhooks (
-      id TEXT PRIMARY KEY,
-      timestamp TEXT NOT NULL,
-      device_eui TEXT,
-      payload_hex TEXT,
-      fport INTEGER,
-      decoded_data TEXT,
-      raw_content TEXT NOT NULL,
-      processing_status TEXT NOT NULL,
-      created_at TEXT NOT NULL,
-      line_metrics_sent INTEGER NOT NULL DEFAULT 0,
-      metadata TEXT
-    );
-    CREATE INDEX IF NOT EXISTS idx_webhooks_timestamp ON webhooks(timestamp);
-    CREATE INDEX IF NOT EXISTS idx_webhooks_device_eui ON webhooks(device_eui);
-  `);
-  dbInstance = db;
-  return db;
+function getDb() {
+  return getAppDatabase();
 }
 
 export function closeWebhookDb(): void {
-  if (dbInstance) {
-    dbInstance.close();
-    dbInstance = null;
+  closeAppDatabase();
+}
+
+/** Lightweight DB connectivity check for /api/health */
+export function pingWebhookDb(): boolean {
+  try {
+    const db = getDb();
+    db.prepare('SELECT 1').get();
+    return true;
+  } catch {
+    return false;
   }
 }
 
 export interface StoreWebhookInput {
+  id?: string;
   timestamp: string;
   deviceEui: string;
   payloadHex: string | null;
@@ -77,7 +59,7 @@ export interface StoreWebhookInput {
 
 export function storeWebhook(input: StoreWebhookInput): string {
   const db = getDb();
-  const id = randomUUID();
+  const id = input.id ?? randomUUID();
   const createdAt = new Date().toISOString();
   const stmt = db.prepare(`
     INSERT INTO webhooks (
@@ -163,6 +145,45 @@ export function queryWebhooks(options: WebhookQueryOptions = {}): StoredWebhookR
   }
 
   return result;
+}
+
+export function getLatestWebhookForEui(deviceEui: string): StoredWebhookRow | null {
+  const db = getDb();
+  const row = db
+    .prepare(
+      `SELECT * FROM webhooks WHERE device_eui = ? OR lower(device_eui) = lower(?) ORDER BY datetime(timestamp) DESC LIMIT 1`
+    )
+    .get(deviceEui, deviceEui) as Record<string, unknown> | undefined;
+  return row ? parseRow(row) : null;
+}
+
+export function listWebhooksPendingDispatch(limit = 50): StoredWebhookRow[] {
+  const db = getDb();
+  const rows = db
+    .prepare(
+      `SELECT * FROM webhooks WHERE line_metrics_sent = 0 AND processing_status IN ('ok','partial') ORDER BY datetime(timestamp) DESC LIMIT ?`
+    )
+    .all(limit) as Record<string, unknown>[];
+  return rows.map(parseRow);
+}
+
+export function updateWebhookLineMetricsSent(id: string, sent: boolean): void {
+  const db = getDb();
+  db.prepare('UPDATE webhooks SET line_metrics_sent = ? WHERE id = ?').run(sent ? 1 : 0, id);
+}
+
+export function queryWebhooksInWindow(
+  deviceEui: string,
+  startIso: string,
+  endIso: string
+): StoredWebhookRow[] {
+  const db = getDb();
+  const rows = db
+    .prepare(
+      `SELECT * FROM webhooks WHERE device_eui = ? AND datetime(timestamp) >= datetime(?) AND datetime(timestamp) <= datetime(?) ORDER BY datetime(timestamp) ASC`
+    )
+    .all(deviceEui, startIso, endIso) as Record<string, unknown>[];
+  return rows.map(parseRow);
 }
 
 export function getWebhookStatsFromDb(): {

@@ -1,28 +1,40 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { randomUUID } from 'crypto';
 import DeviceManager from '@/lib/device-manager';
-import LineMetricsClient from '@/lib/line-metrics-client';
 import { decodePayload } from '@/lib/decode-payload';
+import { dispatchDeviceOutputs } from '@/lib/dispatcher';
 import {
   buildDeviceMap,
   extractUplinkInfoFromActilityContent,
   resolveLocalDeviceForUplink,
 } from '@/lib/webhook-processing';
+import { checkRateLimit, rateLimitKeyForRequest } from '@/lib/rate-limit';
 import { storeWebhook, type ProcessingStatus } from '@/lib/webhook-store';
 
 export const runtime = 'nodejs';
 
+function getClientIp(request: NextRequest): string | null {
+  const xf = request.headers.get('x-forwarded-for');
+  if (xf) {
+    return xf.split(',')[0].trim();
+  }
+  return request.headers.get('x-real-ip');
+}
+
 function verifyWebhookSecret(request: NextRequest): boolean {
-  const secret = process.env.WEBHOOK_SECRET;
-  if (!secret) {
+  const raw = process.env.WEBHOOK_SECRET;
+  if (!raw) {
     return true;
   }
+  const secrets = raw
+    .split(',')
+    .map((s) => s.trim())
+    .filter(Boolean);
   const auth = request.headers.get('authorization');
   const header = request.headers.get('x-webhook-secret');
-  if (auth === `Bearer ${secret}`) {
-    return true;
-  }
-  if (header === secret) {
-    return true;
+  for (const secret of secrets) {
+    if (auth === `Bearer ${secret}`) return true;
+    if (header === secret) return true;
   }
   return false;
 }
@@ -42,6 +54,14 @@ export async function POST(request: NextRequest) {
     );
   }
 
+  const uplinkForLimit = body.DevEUI_uplink as { DevEUI?: unknown } | undefined;
+  const euiForLimit =
+    uplinkForLimit?.DevEUI != null ? String(uplinkForLimit.DevEUI) : undefined;
+  const rateKey = rateLimitKeyForRequest(getClientIp(request), euiForLimit);
+  if (!checkRateLimit(rateKey)) {
+    return NextResponse.json({ success: false, error: 'Too Many Requests' }, { status: 429 });
+  }
+
   const allDevices = DeviceManager.reloadDevices();
   const deviceMap = buildDeviceMap(allDevices as Record<string, unknown>[]);
 
@@ -53,6 +73,8 @@ export async function POST(request: NextRequest) {
     deviceInfo.payload,
     deviceInfo.fPort
   );
+
+  const webhookRecordId = randomUUID();
 
   const finalDeviceInfo =
     decodeResult.deviceInfo ||
@@ -68,23 +90,18 @@ export async function POST(request: NextRequest) {
   let lineMetricsOk = false;
   let lineMetricsError: string | undefined;
 
-  if (
-    localDevice?.lineMetrics &&
-    (localDevice.lineMetrics as { enabled?: boolean }).enabled &&
-    decodeResult.decodedData
-  ) {
+  if (localDevice && decodeResult.decodedData) {
     try {
-      const lineMetricsClient = new LineMetricsClient();
-      const lmResult = (await lineMetricsClient.sendData(
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- runtime shape from devices.json
-        localDevice.lineMetrics as any,
-        decodeResult.decodedData as Record<string, unknown>,
-        deviceInfo.deviceEUI,
-        deviceInfo.timestamp
-      )) as { success?: boolean; error?: string };
-      lineMetricsOk = Boolean(lmResult.success);
-      if (!lmResult.success && lmResult.error) {
-        lineMetricsError = String(lmResult.error);
+      const disp = await dispatchDeviceOutputs({
+        webhookId: webhookRecordId,
+        device: localDevice as Record<string, unknown>,
+        deviceEui: deviceInfo.deviceEUI,
+        decodedData: decodeResult.decodedData as Record<string, unknown>,
+        timestamp: deviceInfo.timestamp,
+      });
+      lineMetricsOk = disp.anySuccess;
+      if (disp.errors.length) {
+        lineMetricsError = disp.errors.join('; ');
       }
     } catch (e) {
       lineMetricsError = e instanceof Error ? e.message : String(e);
@@ -105,6 +122,7 @@ export async function POST(request: NextRequest) {
   const deviceDisplayName = finalDeviceInfo?.name || deviceInfo.deviceEUI;
 
   const id = storeWebhook({
+    id: webhookRecordId,
     timestamp: deviceInfo.timestamp,
     deviceEui: deviceInfo.deviceEUI,
     payloadHex: deviceInfo.payload !== 'Kein Payload' ? deviceInfo.payload : null,

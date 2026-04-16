@@ -1,0 +1,1208 @@
+{
+  "devices": {
+    "device_1752872655532_eduxl3b6n": {
+      "deviceId": "device_1752872655532_eduxl3b6n",
+      "deviceEUI": "70B3D538780200AD",
+      "name": "G47_Wasserzähler",
+      "description": "",
+      "decoder": "h200",
+      "manufacturer": "GWF",
+      "model": "RCM-H200",
+      "image": "/images/devices/default.svg",
+      "createdAt": "2025-07-18T21:04:15.547Z",
+      "updatedAt": "2025-07-30T20:33:41.233Z",
+      "lastSeen": "2025-07-20T20:39:29.827Z",
+      "dataCount": 0,
+      "metadata": {},
+      "lineMetrics": {
+        "enabled": true,
+        "clientId": "api_4192d7fa929c",
+        "clientSecret": "f6a61495a9e92acb30f7d8e1c58fb86f",
+        "projectId": "2d356681cfc44b43baac746b28e81ba3",
+        "dataPoints": {
+          "meterVolume": "wasser"
+        }
+      }
+    },
+    "device_1752872742706_550x5g1bx": {
+      "deviceId": "device_1752872742706_550x5g1bx",
+      "deviceEUI": "70B3D5B6F8058151",
+      "name": "G47_Gaszähler",
+      "description": "",
+      "decoder": "integra-topas-sonic",
+      "manufacturer": "Integra",
+      "model": "Topas Sonic",
+      "image": "/images/devices/default.svg",
+      "createdAt": "2025-07-18T21:05:42.729Z",
+      "updatedAt": "2025-07-29T21:32:22.110Z",
+      "lastSeen": "2025-07-20T20:39:29.827Z",
+      "dataCount": 0,
+      "metadata": {},
+      "lineMetrics": {
+        "enabled": true,
+        "clientId": "api_4192d7fa929c",
+        "clientSecret": "f6a61495a9e92acb30f7d8e1c58fb86f",
+        "projectId": "2d356681cfc44b43baac746b28e81ba3",
+        "dataPoints": {
+          "volume": "gas"
+        }
+      }
+    },
+    "0080E1150589E62E": {
+      "deviceId": "0080E1150589E62E",
+      "deviceEUI": "0080E1150589E62E",
+      "name": "0080E1150589E62E",
+      "description": "Auto-generated device from webhook data",
+      "decoder": "harvy2",
+      "manufacturer": "Dezem",
+      "model": "Harvy 2",
+      "image": "/images/devices/default.svg",
+      "createdAt": "2025-07-20T20:39:29.827Z",
+      "updatedAt": "2025-07-20T20:45:58.899Z",
+      "lastSeen": "2025-07-20T20:39:29.827Z",
+      "dataCount": 0,
+      "metadata": {},
+      "lineMetrics": {
+        "enabled": false,
+        "apiKey": "",
+        "projectId": "",
+        "dataPoints": {}
+      }
+    },
+    "0080E1150589B443": {
+      "deviceId": "0080E1150589B443",
+      "deviceEUI": "0080E1150589B443",
+      "name": "0080E1150589B443",
+      "description": "Auto-generated device from webhook data",
+      "decoder": "harvy2",
+      "manufacturer": "Dezem",
+      "model": "Harvy2",
+      "image": "/images/devices/default.svg",
+      "createdAt": "2025-07-20T20:39:37.579Z",
+      "updatedAt": "2025-07-20T20:46:02.077Z",
+      "lastSeen": "2025-07-20T20:39:37.579Z",
+      "dataCount": 0,
+      "metadata": {},
+      "lineMetrics": {
+        "enabled": false,
+        "apiKey": "",
+        "projectId": "",
+        "dataPoints": {}
+      }
+    }
+  },
+  "decoders": {
+    "os2iot": {
+      "decoders": [
+        {
+          "id": "adeunis_ftd-1",
+          "name": "Adeunis FTD 1",
+          "description": "Payload decoder for Adeunis_FTD-1",
+          "manufacturer": "Adeunis",
+          "model": "FTD 1",
+          "code": "function Decoder(bytes) {\n  var decoded = {};\n\n  var offset = 0;\n  if (offset + 1 <= bytes.length) {\n    var status = bytes[offset++]; // bitmask indicating the presence of the other fields\n    if (status & 0x80 && offset + 1 < bytes.length) {\n      // Temperature information (degree Celsius)\n      var temperature = bytes[offset];\n      if (temperature > 127) {\n        temperature = temperature - 256;\n      }\n      decoded.temperature = temperature;\n      offset += 1;\n    }\n    if (status & 0x40) {\n      // Transmission triggered by the accelerometer\n      decoded.trigger = \"accelerometer\";\n    }\n    if (status & 0x20) {\n      // Transmission triggered by pressing the pushbutton\n      decoded.trigger = \"pushbutton\";\n    }\n    if (status & 0x10 && offset + 9 <= bytes.length) {\n      // GPS information\n      var latDeg10   = bytes[offset] >> 4;\n      var latDeg1    = bytes[offset] & 0x0f;\n      var latMin10   = bytes[offset + 1] >> 4;\n      var latMin1    = bytes[offset + 1] & 0x0f;\n      var latMin01   = bytes[offset + 2] >> 4;\n      var latMin001  = bytes[offset + 2] & 0x0f;\n      var latMin0001 = bytes[offset + 3] >> 4;\n      var latSign    = bytes[offset + 3] & 0x01 ? -1 : 1;\n      decoded.latitude = latSign * (latDeg10 * 10 + latDeg1 + (latMin10 * 10 + latMin1 + latMin01 * 0.1 + latMin001 * 0.01 + latMin0001 * 0.001) / 60);\n      var lonDeg100 = bytes[offset + 4] >> 4;\n      var lonDeg10  = bytes[offset + 4] & 0x0f;\n      var lonDeg1   = bytes[offset + 5] >> 4;\n      var lonMin10  = bytes[offset + 5] & 0x0f;\n      var lonMin1   = bytes[offset + 6] >> 4;\n      var lonMin01  = bytes[offset + 6] & 0x0f;\n      var lonMin001 = bytes[offset + 7] >> 4;\n      var lonSign   = bytes[offset + 7] & 0x01 ? -1 : 1;\n      decoded.longitude = lonSign * (lonDeg100 * 100 + lonDeg10 * 10 + lonDeg1 + (lonMin10 * 10 + lonMin1 + lonMin01 * 0.1 + lonMin001 * 0.01) / 60);\n      decoded.altitude = 0; // altitude information not available\n      decoded.sats = bytes[offset + 8] & 0x0f; // number of satellites\n      offset += 9;\n    }\n    if (status & 0x08 && offset + 1 <= bytes.length) {\n      // Uplink frame counter\n      decoded.uplink = bytes[offset];\n      offset += 1;\n    }\n    if (status & 0x04 && offset + 1 <= bytes.length) {\n      // Downlink frame counter\n      decoded.downlink = bytes[offset];\n      offset += 1;\n    }\n    if (status & 0x02 && offset + 2 <= bytes.length) {\n      // Battery level information (mV)\n      decoded.battery = bytes[offset] << 8 | bytes[offset + 1];\n      offset += 2;\n    }\n    if (status & 0x01 && offset + 2 <= bytes.length) {\n      // RSSI (dBm) and SNR (dB) information\n      decoded.rssi = - bytes[offset];\n      var snr = bytes[offset + 1];\n      if (snr > 127) {\n        snr = snr - 256;\n      }\n      decoded.snr = snr;\n      offset += 2;\n    }\n  }\n\n  return decoded;\n}\n\n\n/** Helper functions **/\n\nfunction decodeToString(payload) {\n  return String.fromCharCode.apply(String, payload);\n}\n\nfunction decodeToJson(payload) {\n  // covert payload to string.\n  var str = decodeToString(payload);\n\n  // parse string to JSON\n  var data = JSON.parse(str);\n  return data;\n}\n\n    function base64ToHex(str) {\n        const raw = atob(str);\n        let result = '';\n        for (let i = 0; i < raw.length; i++) {\n        const hex = raw.charCodeAt(i).toString(16);\n        result += (hex.length === 2 ? hex : '0' + hex);\n        }\n    return result.toUpperCase();\n    }\n\nfunction decode(payload, metadata) {\n  let res = {};\n  res.payload = payload;\n  payloadHEX = base64ToHex(payload.data);\n  res.payload.data = Decoder(getHex(payloadHEX));\n  return res;\n}\n\nfunction getHex(val) {\n  if (val.startsWith(\"0x\") || val.startsWith(\"0X\")) {\n    val = val.substring(2); //get rid of starting '0x'\n  }\n\n  var numBytes = val.length / 2;\n  var bytes = [];\n\n  for (var i = 0; i < numBytes; i++) {\n    bytes.push(parseInt(val.substring(i * 2, i * 2 + 2), 16));\n  }\n\n  return bytes;\n}\n",
+          "image": null,
+          "repository": "os2iot",
+          "lastUpdate": "2025-07-18T20:48:48.109Z",
+          "metadata": {
+            "originalFolder": "Adeunis_FTD-1",
+            "codeUrl": "https://raw.githubusercontent.com/OS2iot/OS2iot-payloaddecoders/main/Adeunis_FTD-1/Adeunis_FTD-1.js",
+            "readmeUrl": "https://raw.githubusercontent.com/OS2iot/OS2iot-payloaddecoders/main/Adeunis_FTD-1/README.md"
+          },
+          "readme": "# IoT-device model\nAdeunis Field Test Device LoRaWAN\n\n## Transmission type\nLoRaWAN\n\n## Description\nTurn bytes into meaningful data for signal quality and GPS Location.\n\n## Source\nwww.adeunis.com adjusted for OS2IoT\n\n## Based on\nNone.\n\n## Author\nAdeunis & Alexander Ibsen, Govtech Midtjylland\n\n### Contact\nAlei@aarhus.dk\n"
+        },
+        {
+          "id": "axioma_w1_decoder",
+          "name": "Axioma W1 decoder",
+          "description": "Payload decoder for Axioma_W1_decoder",
+          "manufacturer": "Axioma",
+          "model": "W1 decoder",
+          "code": "//Function to decode status messages for Axioma payloads\n//Originally by Alexandre Alapetite, github.com/Alkarex for node-red\n//Adjusted by Alexander Ibsen, alei@aarhus.dk for OS2IoT and NGSI-LD format\n//Last updates jan-2025\n\nfunction statusAxiomaShort(s) {\n    const messages = [];\n    switch (s) {\n        case 0x00: messages.push('OK'); break;\n        case 0x04: messages.push('Low battery'); break;\n        case 0x08: messages.push('Permanent error'); break;\n        case 0x10: messages.push('Dry'); break;\n        case 0x70: messages.push('Backflow'); break;\n        case 0xD0: messages.push('Manipulation'); break;\n        case 0xB0: messages.push('Burst'); break;\n        case 0x30: messages.push('Leakage'); break;\n        case 0x90: messages.push('Low temperature'); break;\n    }\n    return messages;\n}\n\n// Function to decode Axioma Short payload (base64)\nfunction decodeAxiomaShort(raw64) {\n    const b = new Uint8Array(atob(raw64).split('').map(char => char.charCodeAt(0)));\n    let epoch, state, volume, pastPeriod;\n    let pastVolumes = [];\n    let i = 0;\n    let error;\n\n    try {\n        epoch = b[i] | (b[i + 1] << 8) | (b[i + 2] << 16) | (b[i + 3] << 24); i += 4;\n        state = b[i]; i += 1;\n        volume = b[i] | (b[i + 1] << 8) | (b[i + 2] << 16) | (b[i + 3] << 24); i += 4;\n\n        while (i + 8 <= b.length) {\n            pastVolumes.push(b[i] | (b[i + 1] << 8) | (b[i + 2] << 16) | (b[i + 3] << 24)); i += 4;\n        }\n\n        pastPeriod = b[i] | (b[i + 1] << 8) | (b[i + 2] << 16) | (b[i + 3] << 24); i += 4;\n    } catch (ex) {\n        error = true;\n    }\n\n    return {\n        date: state == 0 ? new Date(epoch * 1000).toISOString() : undefined,\n        state: state,\n        stateMessages: statusAxiomaShort(state),\n        volume: state == 0 && volume ? volume / 1000.0 : undefined,\n        pastVolumes: state == 0 && pastVolumes.length > 0 ? pastVolumes.map(v => v / 1000.0) : undefined,\n        pastPeriod: state == 0 && pastPeriod ? pastPeriod : undefined,\n        error: error ? error : undefined,\n    };\n}\n\n// Function to decode status messages for Axioma Extended payloads\nfunction statusAxiomaExtended(s) {\n    const messages = [];\n    if (s === 0x00) {\n        messages.push('OK');\n    } else {\n        if (s & 0x04) messages.push('Low battery');\n        if (s & 0x08) messages.push('Permanent error');\n        if (s & 0x10) messages.push('Temporary error');\n        if (s === 0x10) messages.push('Dry');\n        if ((s & 0x60) === 0x60) messages.push('Backflow');\n        if ((s & 0xA0) === 0xA0) messages.push('Burst');\n        if ((s & 0x20) && !(s & 0x40) && !(s & 0x80)) messages.push('Leakage');\n        if ((s & 0x80) && !(s & 0x20)) messages.push('Low temperature');\n    }\n    return messages;\n}\n\n// Function to decode Axioma Extended payload (base64)\nfunction decodeAxiomaExtended(raw64) {\n    const b = new Uint8Array(atob(raw64).split('').map(char => char.charCodeAt(0)));\n    let epoch, state, volume, logEpoch, logVolume;\n    let deltaVolumes = [];\n    let i = 0;\n    let error;\n\n    try {\n        epoch = b[i] | (b[i + 1] << 8) | (b[i + 2] << 16) | (b[i + 3] << 24); i += 4;\n        state = b[i]; i += 1;\n        volume = b[i] | (b[i + 1] << 8) | (b[i + 2] << 16) | (b[i + 3] << 24); i += 4;\n        logEpoch = b[i] | (b[i + 1] << 8) | (b[i + 2] << 16) | (b[i + 3] << 24); i += 4;\n        logVolume = b[i] | (b[i + 1] << 8) | (b[i + 2] << 16) | (b[i + 3] << 24); i += 4;\n\n        while (i + 2 <= b.length) {\n            deltaVolumes.push(b[i] | (b[i + 1] << 8)); i += 2;\n        }\n    } catch (ex) {\n        error = true;\n    }\n\n    return {\n        date: state == 0 ? new Date(epoch * 1000).toISOString() : undefined,\n        state: state,\n        stateMessages: statusAxiomaExtended(state),\n        volume: state == 0 && volume ? volume / 1000.0 : undefined,\n        logDate: state == 0 && logEpoch ? new Date(logEpoch * 1000).toISOString() : undefined,\n        logVolume: state == 0 && logVolume ? logVolume / 1000.0 : undefined,\n        deltaVolumes: state == 0 && deltaVolumes.length > 0 ? deltaVolumes.map(v => v / 1000.0) : undefined,\n        error: error ? error : undefined,\n    };\n}\n\n// Function to auto-detect whether the payload is \"Short\" or \"Extended\"\nfunction autoDecode(raw64) {\n    let rawLength;\n    try {\n        rawLength = atob(raw64).length;\n    } catch (ex) {\n        rawLength = 0;\n    }\n\n    if (rawLength > 42) {\n        return decodeAxiomaExtended(raw64);\n    } else if (rawLength <= 9) {\n        return decodeAxiomaShort(raw64);\n    } else {\n        let sniffAxiomaExtended;\n        try {\n            sniffAxiomaExtended = decodeAxiomaExtended(raw64);\n            const maxValidDateDifferenceMs = 1000 * 86400 * 15;\n            const date1 = new Date(sniffAxiomaExtended.date);\n            const date2 = new Date(sniffAxiomaExtended.logDate);\n            if (Math.abs(date1.getTime() - date2.getTime()) > maxValidDateDifferenceMs) {\n                return decodeAxiomaShort(raw64);\n            }\n        } catch (ex) {\n            return decodeAxiomaShort(raw64);\n        }\n        return sniffAxiomaExtended;\n    }\n}\n\n// Example input and usage in the browser\nfunction processPayload(raw64) {\n    try {\n        const result = autoDecode(raw64);\n        return result;\n    } catch (ex) {\n        return { error: ex.message };\n    }\n}\n\nfunction decode(payload, metadata) {\n    let decoded = processPayload(payload.data);\n\n        let res = {};\n        \n        let sensorId = payload.deviceInfo.devEui.slice(-6);\n        //res.decoded = decoded;\n        res.id = \"water-meter:\" + sensorId+\"-axioma\";\n        res.type=  \"water-meter\"        \n        //res.decodedPayload = decoded\n        res.name =  {\n\n            \"type\": \"Property\",\n            \"value\": metadata.name\n        }\n        if (decoded.hasOwnProperty(\"logVolume\") && decoded.logVolume !== undefined) {\n            res.logVolume = {\n                \"type\": \"Property\",\n                \"value\": decoded.logVolume,\n                \"observedAt\": decoded.logDate\n            };\n        }\n        if (decoded.hasOwnProperty(\"state\") && decoded.state !== undefined)\n        {\n            res.state =  {\n\n                        \"type\": \"Property\",\n                        \"value\": decoded.state,\n                        \"observedAt\": decoded.logDate\n            }\n        }    \n         res.location = {\n                \"type\": \"GeoProperty\",\n                \"value\": {\n                    \"type\": \"Point\",\n                    \"coordinates\":[Number(metadata.location.coordinates[0]), Number(metadata.location.coordinates[1])]\n                }        \n        }          \n        return [res];\n      }\n",
+          "image": null,
+          "repository": "os2iot",
+          "lastUpdate": "2025-07-18T20:48:48.662Z",
+          "metadata": {
+            "originalFolder": "Axioma_W1_decoder",
+            "codeUrl": "https://raw.githubusercontent.com/OS2iot/OS2iot-payloaddecoders/main/Axioma_W1_decoder/Axioma_W1_Decoder.js",
+            "readmeUrl": "https://raw.githubusercontent.com/OS2iot/OS2iot-payloaddecoders/main/Axioma_W1_decoder/README.md"
+          },
+          "readme": "# IoT-device model\nAxioma W1\n\n## Transmission type\nLoRaWAN\n\n## Description\nDecode data from the sensor. Data model is compatible with NGSI-LD. Made for OS2IoT\n\n## Example output data\n````JSON\n    {\n        \"id\": \"water-meter:111111-axioma\",\n        \"type\": \"water-meter\",\n        \"name\": {\n            \"type\": \"Property\",\n            \"value\": \"Vand, bassin - Skole\"\n        },\n        \"logVolume\": {\n            \"type\": \"Property\",\n            \"value\": 139.55,\n            \"observedAt\": \"2025-02-10T18:00:03.000Z\"\n        },\n        \"state\": {\n            \"type\": \"Property\",\n            \"value\": 0,\n            \"observedAt\": \"2025-02-10T18:00:03.000Z\"\n        },\n        \"location\": {\n            \"type\": \"GeoProperty\",\n            \"value\": {\n                \"type\": \"Point\",\n                \"coordinates\": [\n                    12.123444,\n                    53.134211\n                ]\n            }\n        }\n    }\n```` \n\n## Source\nNo Source\n\n## Based on\nhttps://gist.github.com/Alkarex/4b5d1fef2ff84d483e2793ed009ef607\n\n## Author\nminiib (Github)\n\n### Contact\nAlexander Ibsen, alei@aarhus.dk\n"
+        },
+        {
+          "id": "decentlab_ultrasonic_level_sensor_model_b",
+          "name": "Decentlab Ultrasonic level Sensor model B",
+          "description": "Payload decoder for Decentlab_Ultrasonic_level_Sensor_model_B",
+          "manufacturer": "Decentlab",
+          "model": "Ultrasonic level Sensor model B",
+          "code": "\nfunction base64ToBytes(str) {\n    return atob(str)\n        .split(\"\")\n        .map(function (c) {\n        return c.charCodeAt(0);\n        });\n}\n\nfunction base64ToHex(str) {\n  const raw = atob(str);\n  let result = '';\n  for (let i = 0; i < raw.length; i++) {\n    const hex = raw.charCodeAt(i).toString(16);\n    result += (hex.length === 2 ? hex : '0' + hex);\n    result += ' ';\n  }\n  return result.toUpperCase();\n}\n\n/* https://www.decentlab.com/products/ultrasonic-distance-/-level-sensor-for-lorawan */\n\nvar decentlab_decoder = {\n  PROTOCOL_VERSION: 2,\n  SENSORS: [\n    {length: 2,\n     values: [{name: 'distance',\n               displayName: 'Distance',\n               convert: function (x) { return x[0]; },\n               unit: 'mm'},\n              {name: 'number_of_valid_samples',\n               displayName: 'Number of valid samples',\n               convert: function (x) { return x[1]; }}]},\n    {length: 1,\n     values: [{name: 'battery_voltage',\n               displayName: 'Battery voltage',\n               convert: function (x) { return x[0] / 1000; },\n               unit: 'V'}]}\n  ],\n\n  read_int: function (bytes, pos) {\n    return (bytes[pos] << 8) + bytes[pos + 1];\n  },\n\n  decode: function (bytes) {\n\n    var version = bytes[0];\n    if (version != this.PROTOCOL_VERSION) {\n      return {error: \"protocol version \" + version + \" doesn't match v2\"};\n    }\n\n    var deviceId = this.read_int(bytes, 1);\n    var flags = this.read_int(bytes, 3);\n    var result = {'protocol_version': version, 'device_id': deviceId};\n    // decode payload\n    var pos = 5;\n    for (i = 0; i < this.SENSORS.length; i++, flags >>= 1) {\n      if ((flags & 1) !== 1)\n        continue;\n\n      var sensor = this.SENSORS[i];\n      var x = [];\n      // convert data to 16-bit integer array\n      for (j = 0; j < sensor.length; j++) {\n        x.push(this.read_int(bytes, pos));\n        pos += 2;\n      }\n\n      // decode sensor values\n      for (j = 0; j < sensor.values.length; j++) {\n        var value = sensor.values[j];\n        if ('convert' in value) {\n          result[value.name] = {displayName: value.displayName,\n                                value: value.convert.bind(this)(x)};\n          if ('unit' in value)\n            result[value.name]['unit'] = value.unit;\n        }\n      }\n    }\n    return result;\n  }\n};\n\nfunction decode(payload, metadata) {\n    let metameta = JSON.parse(metadata.metadata);\n    metadata.metadata = metameta; // lets unfuck metadata first\n\n\n    let bytes = base64ToBytes(payload.data);\n    let decdec = decentlab_decoder.decode(bytes);\n    let distance = decdec.distance.value / 1000;\n\n    let decoded = {\n        HEX : base64ToHex(payload.data),\n        batteryVoltage: decdec.battery_voltage.value,\n        distance: distance,\n        number_of_valid_samples : decdec.number_of_valid_samples.value,\n    };\n\n    if ('sensorkote_DVR90' in metameta) {\n        decoded.vandspejl_DVR90 = metameta.sensorkote_DVR90 - distance;\n\n        if ('bundkote_DVR90' in metameta) {\n            decoded.vanddybde = decoded.vandspejl_DVR90- metameta.bundkote_DVR90;\n        }\n    }\n\n\n    return {\n        payload:  payload,\n        metadata: metadata,\n\n        decoded:  decoded\n    };\n}\n",
+          "image": "https://raw.githubusercontent.com/OS2iot/OS2iot-payloaddecoders/main/Decentlab_Ultrasonic_level_Sensor_model_B/metdadata_eksempel.png",
+          "repository": "os2iot",
+          "lastUpdate": "2025-07-18T20:48:49.198Z",
+          "metadata": {
+            "originalFolder": "Decentlab_Ultrasonic_level_Sensor_model_B",
+            "codeUrl": "https://raw.githubusercontent.com/OS2iot/OS2iot-payloaddecoders/main/Decentlab_Ultrasonic_level_Sensor_model_B/DecentLab%20DL%20MBX.js",
+            "readmeUrl": "https://raw.githubusercontent.com/OS2iot/OS2iot-payloaddecoders/main/Decentlab_Ultrasonic_level_Sensor_model_B/README.md"
+          },
+          "readme": "# IoT-device model\nDecentlab, Ultrasonic level Sensor model B\n## Transmission type\nLoRaWAN\n\n## Description\nEr lavet specifikt til dansk projektion DVR90 og til brug på OS2IoT, ved brug af metadata-rækker under.  Som minimum skal bruger kun måle koten på sensoren og angive denne i OS2IoT for at få vandspejlskoten i payload. Ønsker bruger alligevel at få den lokale vandstand (altså hvor mange meter over bund er vandspejl) kan man supplere med dette - kræver at bundkote måles on site. Payload dekoderen er en version, idet at scenariet er at bundkote ikke altid er fysisk muligt at måle eller relevant.\nSe billede for eksempel på metadatarækker.\n\n\n## Source\nhttps://github.com/decentlab/decentlab-decoders\n## Based on\nIngen kommentarer der\n\n## Author\nhttps://github.com/MortenGuldager / https://github.com/Damorck\n\n### Contact\nmogul@mogul.dk / danny.morck@gate21.dk\n"
+        },
+        {
+          "id": "elsys_ems_accelerometer-decoder-1",
+          "name": "Elsys EMS Accelerometer Decoder 1",
+          "description": "Payload decoder for Elsys EMS Accelerometer-Decoder-1",
+          "manufacturer": "Elsys",
+          "model": "Decoder 1",
+          "code": "/*\n  ______ _       _______     _______ \n |  ____| |     / ____\\ \\   / / ____|\n | |__  | |    | (___  \\ \\_/ / (___  \n |  __| | |     \\___ \\  \\   / \\___ \\ \n | |____| |____ ____) |  | |  ____) |\n |______|______|_____/   |_| |_____/ \n \n  ELSYS simple payload decoder. \n  Use it as it is or remove the bugs :)\n  www.elsys.se\n  peter@elsys.se\n*/\nfunction bin16dec(bin) {\n    var num = bin & 0xffff;\n    if (0x8000 & num) num = -(0x010000 - num);\n    return num;\n  }\nfunction bin8dec(bin) {\n    var num = bin & 0xff;\n    if (0x80 & num) num = -(0x0100 - num);\n    return num;\n  }\nfunction base64ToBytes(str) {\n    return atob(str)\n      .split(\"\")\n      .map(function (c) {\n        return c.charCodeAt(0);\n      });\n  }\nfunction hexToBytes(hex) {\n    for (var bytes = [], c = 0; c < hex.length; c += 2)\n      bytes.push(parseInt(hex.substr(c, 2), 16));\n    return bytes;\n  }\n      \nfunction base64ToHex(str) {\nconst raw = atob(str);\nlet result = '';\nfor (let i = 0; i < raw.length; i++) {\nconst hex = raw.charCodeAt(i).toString(16);\nresult += (hex.length === 2 ? hex : '0' + hex);\n}\nreturn result.toUpperCase();\n}\n\n// https://www.elsys.se/en/elsys-payload/\n\n\nconst TYPE_TEMP = 0x01; //temp 2 bytes -3276.8°C -->3276.7°C\nconst TYPE_RH = 0x02; //Humidity 1 byte  0-100%\nconst TYPE_ACC = 0x03; //acceleration 3 bytes X,Y,Z -128 --> 127 +/-63=1G\nconst TYPE_LIGHT = 0x04; //Light 2 bytes 0-->65535 Lux\nconst TYPE_MOTION = 0x05; //No of motion 1 byte  0-255\nconst TYPE_CO2 = 0x06; //Co2 2 bytes 0-65535 ppm\nconst TYPE_VDD = 0x07; //VDD 2byte 0-65535mV\nconst TYPE_ANALOG1 = 0x08; //VDD 2byte 0-65535mV\nconst TYPE_GPS = 0x09; //3bytes lat 3bytes long binary\nconst TYPE_PULSE1 = 0x0A; //2bytes relative pulse count\nconst TYPE_PULSE1_ABS = 0x0B; //4bytes no 0->0xFFFFFFFF\nconst TYPE_EXT_TEMP1 = 0x0C; //2bytes -3276.5C-->3276.5C\nconst TYPE_EXT_DIGITAL = 0x0D; //1bytes value 1 or 0\nconst TYPE_EXT_DISTANCE = 0x0E; //2bytes distance in mm\nconst TYPE_ACC_MOTION = 0x0F; //1byte number of vibration/motion\nconst TYPE_IR_TEMP = 0x10; //2bytes internal temp 2bytes external temp -3276.5C-->3276.5C\nconst TYPE_OCCUPANCY = 0x11; //1byte data\nconst TYPE_WATERLEAK = 0x12; //1byte data 0-255\nconst TYPE_GRIDEYE = 0x13; //65byte temperature data 1byte ref+64byte external temp\nconst TYPE_PRESSURE = 0x14; //4byte pressure data (hPa)\nconst TYPE_SOUND = 0x15; //2byte sound data (peak/avg)\nconst TYPE_PULSE2 = 0x16; //2bytes 0-->0xFFFF\nconst TYPE_PULSE2_ABS = 0x17; //4bytes no 0->0xFFFFFFFF\nconst TYPE_ANALOG2 = 0x18; //2bytes voltage in mV\nconst TYPE_EXT_TEMP2 = 0x19; //2bytes -3276.5C-->3276.5C\nconst TYPE_EXT_DIGITAL2 = 0x1A; // 1bytes value 1 or 0\nconst TYPE_EXT_ANALOG_UV = 0x1B; // 4 bytes signed int (uV)\nconst TYPE_TVOC = 0x1C; // 2 bytes (ppb)\nconst TYPE_DEBUG = 0x3D; // 4bytes debug\n\nfunction bin16dec(bin) {\nvar num = bin & 0xFFFF;\nif (0x8000 & num)\n    num = -(0x010000 - num);\nreturn num;\n}\n\nfunction bin8dec(bin) {\nvar num = bin & 0xFF;\nif (0x80 & num)\n    num = -(0x0100 - num);\nreturn num;\n}\n\nfunction hexToBytes(hex) {\nfor (var bytes = [], c = 0; c < hex.length; c += 2)\n    bytes.push(parseInt(hex.substr(c, 2), 16));\nreturn bytes;\n}\n\nfunction DecodeElsysPayload(data) {\nvar obj = new Object();\nfor (i = 0; i < data.length; i++) {\n    //console.log(data[i]);\n    switch (data[i]) {\n    case TYPE_TEMP: //Temperature\n        var temp = (data[i + 1] << 8) | (data[i + 2]);\n        temp = bin16dec(temp);\n        obj.temperature = temp / 10;\n        i += 2;\n        break\n    case TYPE_RH: //Humidity\n        var rh = (data[i + 1]);\n        obj.humidity = rh;\n        i += 1;\n        break\n    case TYPE_ACC: //Acceleration\n        obj.x = bin8dec(data[i + 1]);\n        obj.y = bin8dec(data[i + 2]);\n        obj.z = bin8dec(data[i + 3]);\n        i += 3;\n        break\n    case TYPE_LIGHT: //Light\n        obj.light_level = (data[i + 1] << 8) | (data[i + 2]);\n        i += 2;\n        break\n    case TYPE_MOTION: //Motion sensor(PIR)\n        obj.motion = (data[i + 1]);\n        i += 1;\n        break\n    case TYPE_CO2: //CO2\n        obj.co2 = (data[i + 1] << 8) | (data[i + 2]);\n        i += 2;\n        break\n    case TYPE_VDD: //Battery level\n        obj.vdd = (data[i + 1] << 8) | (data[i + 2]);\n        i += 2;\n        break\n    case TYPE_ANALOG1: //Analog input 1\n        obj.analog1 = (data[i + 1] << 8) | (data[i + 2]);\n        i += 2;\n        break\n    case TYPE_GPS: //gps\n        i++;\n        obj.lat = (data[i + 0] | data[i + 1] << 8 | data[i + 2] << 16 | (data[i + 2] & 0x80 ? 0xFF << 24 : 0)) / 10000;\n        obj.long = (data[i + 3] | data[i + 4] << 8 | data[i + 5] << 16 | (data[i + 5] & 0x80 ? 0xFF << 24 : 0)) / 10000;\n        i += 5;\n        break\n    case TYPE_PULSE1: //Pulse input 1\n        obj.pulse1 = (data[i + 1] << 8) | (data[i + 2]);\n        i += 2;\n        break\n    case TYPE_PULSE1_ABS: //Pulse input 1 absolute value\n        var pulseAbs = (data[i + 1] << 24) | (data[i + 2] << 16) | (data[i + 3] << 8) | (data[i + 4]);\n        obj.pulseAbs = pulseAbs;\n        i += 4;\n        break\n    case TYPE_EXT_TEMP1: //External temp\n        var temp = (data[i + 1] << 8) | (data[i + 2]);\n        temp = bin16dec(temp);\n        obj.externalTemperature = temp / 10;\n        i += 2;\n        break\n    case TYPE_EXT_DIGITAL: //Digital input\n        obj.digital = (data[i + 1]);\n        i += 1;\n        break\n    case TYPE_EXT_DISTANCE: //Distance sensor input\n        obj.distance = (data[i + 1] << 8) | (data[i + 2]);\n        i += 2;\n        break\n    case TYPE_ACC_MOTION: //Acc motion\n        obj.accMotion = (data[i + 1]);\n        i += 1;\n        break\n    case TYPE_IR_TEMP: //IR temperature\n        var iTemp = (data[i + 1] << 8) | (data[i + 2]);\n        iTemp = bin16dec(iTemp);\n        var eTemp = (data[i + 3] << 8) | (data[i + 4]);\n        eTemp = bin16dec(eTemp);\n        obj.irInternalTemperature = iTemp / 10;\n        obj.irExternalTemperature = eTemp / 10;\n        i += 4;\n        break\n    case TYPE_OCCUPANCY: //Body occupancy\n        obj.occupancy = (data[i + 1]);\n        i += 1;\n        break\n    case TYPE_WATERLEAK: //Water leak\n        obj.waterleak = (data[i + 1]);\n        i += 1;\n        break\n    case TYPE_GRIDEYE: //Grideye data\n        var ref = data[i+1];\n        i++;\n        obj.grideye = [];\n        for(var j = 0; j < 64; j++) {\n            obj.grideye[j] = ref + (data[1+i+j] / 10.0);\n        }\n        i += 64;\n        break\n    case TYPE_PRESSURE: //External Pressure\n        var temp = (data[i + 1] << 24) | (data[i + 2] << 16) | (data[i + 3] << 8) | (data[i + 4]);\n        obj.pressure = temp / 1000;\n        i += 4;\n        break\n    case TYPE_SOUND: //Sound\n        obj.soundPeak = data[i + 1];\n        obj.soundAvg = data[i + 2];\n        i += 2;\n        break\n    case TYPE_PULSE2: //Pulse 2\n        obj.pulse2 = (data[i + 1] << 8) | (data[i + 2]);\n        i += 2;\n        break\n    case TYPE_PULSE2_ABS: //Pulse input 2 absolute value\n        obj.pulseAbs2 = (data[i + 1] << 24) | (data[i + 2] << 16) | (data[i + 3] << 8) | (data[i + 4]);\n        i += 4;\n        break\n    case TYPE_ANALOG2: //Analog input 2\n        obj.analog2 = (data[i + 1] << 8) | (data[i + 2]);\n        i += 2;\n        break\n    case TYPE_EXT_TEMP2: //External temp 2\n        var temp = (data[i + 1] << 8) | (data[i + 2]);\n        temp = bin16dec(temp);\n        if(typeof obj.externalTemperature2 === \"number\") {\n            obj.externalTemperature2 = [obj.externalTemperature2];\n        } \n        if(typeof obj.externalTemperature2 === \"object\") {\n            obj.externalTemperature2.push(temp / 10);\n        } else {\n            obj.externalTemperature2 = temp / 10;\n        }\n        i += 2;\n        break\n    case TYPE_EXT_DIGITAL2: //Digital input 2\n        obj.digital2 = (data[i + 1]);\n        i += 1;\n        break\n    case TYPE_EXT_ANALOG_UV: //Load cell analog uV\n        obj.analogUv = (data[i + 1] << 24) | (data[i + 2] << 16) | (data[i + 3] << 8) | (data[i + 4]);\n        i += 4;\n        break\n    case TYPE_TVOC:\n        obj.tvoc = (data[i + 1] << 8) | (data[i + 2]);\n        i += 2;\n        break\n    default: //somthing is wrong with data\n        i = data.length;\n        break\n    }\n}\nreturn obj;\n}\n\n\n\n\n  function decode(payload, metadata) {\n    let res = {};\n    \n    let sensorId = payload.devEUI.slice(-4);\n\n    res.id = \"accelerometer-sensor:\" + sensorId + \"-Elsys\";\n    res.type=  \"accelerometer-sensor\"\n    \n    let rawPayload = base64ToHex(payload.data)        \n    let decoded = DecodeElsysPayload(hexToBytes(rawPayload))\n\n    let timestamp = payload.rxInfo[0].time;\n\n\n    res.name =  {\n        \"type\": \"Property\",\n        \"value\": metadata.name\n    }\n    // res.decodedPayload = decoded\n\n    if (decoded.hasOwnProperty(\"occupancy\"))\n    {\n        res.occupancy =  {\n                    \"type\": \"Property\",\n                    \"value\": decoded.occupancy,\n                    \"observedAt\": timestamp\n        }\n    }\n    \n    if (decoded.hasOwnProperty(\"temperature\"))\n    {\n        res.temperature =  {\n                    \"type\": \"Property\",\n                    \"value\": decoded.temperature,\n                    \"observedAt\": timestamp\n        }\n    }\n\n    if (decoded.hasOwnProperty(\"humidity\"))\n    {\n        res.humidity =  {\n                    \"type\": \"Property\",\n                    \"value\": decoded.humidity,\n                    \"observedAt\": timestamp\n        }\n    }\n\n    if (decoded.hasOwnProperty(\"light_level\"))\n    {\n        res.light_level =  {\n                    \"type\": \"Property\",\n                    \"value\": decoded.light_level,\n                    \"observedAt\": timestamp\n        }\n    }\n\n    if (decoded.hasOwnProperty(\"motion\"))\n    {\n        res.motion =  {\n                    \"type\": \"Property\",\n                    \"value\": decoded.motion,\n                    \"observedAt\": timestamp\n        }\n    }        \n\n    if (decoded.hasOwnProperty(\"co2\"))\n    {\n        res.co2 =  {\n                    \"type\": \"Property\",\n                    \"value\": decoded.co2,\n                    \"observedAt\": timestamp\n        }\n    }\n     res.location = {\n            \"type\": \"GeoProperty\",\n            \"value\": {\n                \"type\": \"Point\",\n                \"coordinates\":[Number(metadata.location.coordinates[0]), Number(metadata.location.coordinates[1])]\n            }        \n    }\n\n    // added: fcount - Kristian Risager Larsen, iotlab@aarhus.dk 2024-06\n    if (payload.hasOwnProperty(\"fCnt\"))\n    {\n        res.fCnt =  {\n                    \"type\": \"Property\",\n                    \"value\": payload.fCnt,\n                    \"observedAt\": timestamp\n        }\n    }\n\n    // added: accelerometer output - Kristian Risager Larsen, iotlab@aarhus.dk 2024-06\n    if (decoded.hasOwnProperty(\"x\"))\n    {\n        res.accx =  {\n            \"type\": \"Property\",\n            \"value\": decoded.x,\n            \"observedAt\": timestamp\n        }\n    }\n    \n    if (decoded.hasOwnProperty(\"y\"))\n    {\n        res.accy =  {\n            \"type\": \"Property\",\n            \"value\": decoded.y,\n            \"observedAt\": timestamp\n        }\n    }\n\n    if (decoded.hasOwnProperty(\"z\"))\n    {\n        res.accz =  {\n            \"type\": \"Property\",\n            \"value\": decoded.z,\n            \"observedAt\": timestamp\n        }\n    }\n\n    if (decoded.hasOwnProperty(\"accMotion\"))\n    {\n        res.accMotion =  {\n            \"type\": \"Property\",\n            \"value\": decoded.accMotion,\n            \"observedAt\": timestamp\n        }\n    }     \n\n    return [res];\n  }\n",
+          "image": null,
+          "repository": "os2iot",
+          "lastUpdate": "2025-07-18T20:48:49.718Z",
+          "metadata": {
+            "originalFolder": "Elsys EMS Accelerometer-Decoder-1",
+            "codeUrl": "https://raw.githubusercontent.com/OS2iot/OS2iot-payloaddecoders/main/Elsys%20EMS%20Accelerometer-Decoder-1/ElsysEMSAccelerometerDecoder-1.js",
+            "readmeUrl": "https://raw.githubusercontent.com/OS2iot/OS2iot-payloaddecoders/main/Elsys%20EMS%20Accelerometer-Decoder-1/README.md"
+          },
+          "readme": "# IoT-device model\nElsys EMS (including variants)\n\n## Transmission type\nLoRaWAN\n\n## Description\nTransfer data from the accelerometer sensor. Data model is compatible with NGSI-LD. \n\n## Example output data\n````JSON\n    {\n        \"id\": \"accelerometer-sensor:1234-Elsys\",\n        \"type\": \"accelerometer-sensor\",\n        \"name\": {\n            \"type\": \"Property\",\n            \"value\": \"EMS 1234\"\n        },\n        \"location\": {\n            \"type\": \"GeoProperty\",\n            \"value\": {\n                \"type\": \"Point\",\n                \"coordinates\": [\n                    0,\n                    0\n                ]\n            }\n        },\n        \"fCnt\": {\n            \"type\": \"Property\",\n            \"value\": 1,\n            \"observedAt\": \"2024-07-02T12:00:28.504075Z\"\n        },\n        \"accx\": {\n            \"type\": \"Property\",\n            \"value\": -1,\n            \"observedAt\": \"2024-07-02T12:00:28.504075Z\"\n        },\n        \"accy\": {\n            \"type\": \"Property\",\n            \"value\": -1,\n            \"observedAt\": \"2024-07-02T12:00:28.504075Z\"\n        },\n        \"accz\": {\n            \"type\": \"Property\",\n            \"value\": 63,\n            \"observedAt\": \"2024-07-02T12:00:28.504075Z\"\n        },\n        \"accMotion\": {\n            \"type\": \"Property\",\n            \"value\": 1,\n            \"observedAt\": \"2024-07-02T12:00:28.504075Z\"\n        }\n    }\n```` \n\n## Source\nhttps://www.elsys.se/en/elsys-payload/\n\n## Based on\nElsys Generic\n\n## Author\nkristianrl (Github)\n\n### Contact\nKristian Risager Larsen, IoT Lab, Aarhus Kommune\nlrkr@aarhus.dk\niotlab@aarhus.dk - https://iot.aarhus.dk \n"
+        },
+        {
+          "id": "elsys_generic_decoder-1",
+          "name": "Elsys Generic Decoder 1",
+          "description": "Payload decoder for Elsys Generic Decoder-1",
+          "manufacturer": "Elsys",
+          "model": "1",
+          "code": "        /**\n\n\tIn this editor, you can define your custom javascript code to parse the incoming payload.\t\n\t\n\tThe following variables are available:\n\t\n\tpayload     : hex string of the payload\n\tp\t     : array of bytes represented as string of 2 hex digits \n\tv        : array of bytes represented as integers\n\tmsg.EUI  : device EUI\n\tmsg.fcnt : message frame counter\n\tmsg.port : message port field\n\tmsg.ts   : message timestamp as number (epoch)\n\t\n\tLast line of your script will be printed to the payload payload column.\n\n*/\n/*\n  ______ _       _______     _______ \n |  ____| |     / ____\\ \\   / / ____|\n | |__  | |    | (___  \\ \\_/ / (___  \n |  __| | |     \\___ \\  \\   / \\___ \\ \n | |____| |____ ____) |  | |  ____) |\n |______|______|_____/   |_| |_____/ \n \n  ELSYS simple payload decoder. \n  Use it as it is or remove the bugs :)\n  www.elsys.se\n  peter@elsys.se\n*/\nconst TYPE_TEMP = 0x01; //temp 2 bytes -3276.8°C -->3276.7°C\nconst TYPE_RH = 0x02; //Humidity 1 byte  0-100%\nconst TYPE_ACC = 0x03; //acceleration 3 bytes X,Y,Z -128 --> 127 +/-63=1G\nconst TYPE_LIGHT = 0x04; //Light 2 bytes 0-->65535 Lux\nconst TYPE_MOTION = 0x05; //No of motion 1 byte  0-255\nconst TYPE_CO2 = 0x06; //Co2 2 bytes 0-65535 ppm\nconst TYPE_VDD = 0x07; //VDD 2byte 0-65535mV\nconst TYPE_ANALOG1 = 0x08; //VDD 2byte 0-65535mV\nconst TYPE_GPS = 0x09; //3bytes lat 3bytes long binary\nconst TYPE_PULSE1 = 0x0A; //2bytes relative pulse count\nconst TYPE_PULSE1_ABS = 0x0B; //4bytes no 0->0xFFFFFFFF\nconst TYPE_EXT_TEMP1 = 0x0C; //2bytes -3276.5C-->3276.5C\nconst TYPE_EXT_DIGITAL = 0x0D; //1bytes value 1 or 0\nconst TYPE_EXT_DISTANCE = 0x0E; //2bytes distance in mm\nconst TYPE_ACC_MOTION = 0x0F; //1byte number of vibration/motion\nconst TYPE_IR_TEMP = 0x10; //2bytes internal temp 2bytes external temp -3276.5C-->3276.5C\nconst TYPE_OCCUPANCY = 0x11; //1byte payload\nconst TYPE_WATERLEAK = 0x12; //1byte payload 0-255\nconst TYPE_GRIDEYE = 0x13; //65byte temperature payload 1byte ref+64byte external temp\nconst TYPE_PRESSURE = 0x14; //4byte pressure payload (hPa)\nconst TYPE_SOUND = 0x15; //2byte sound payload (peak/avg)\nconst TYPE_PULSE2 = 0x16; //2bytes 0-->0xFFFF\nconst TYPE_PULSE2_ABS = 0x17; //4bytes no 0->0xFFFFFFFF\nconst TYPE_ANALOG2 = 0x18; //2bytes voltage in mV\nconst TYPE_EXT_TEMP2 = 0x19; //2bytes -3276.5C-->3276.5C\nconst TYPE_EXT_DIGITAL2 = 0x1A; // 1bytes value 1 or 0\nconst TYPE_EXT_ANALOG_UV = 0x1B; // 4 bytes signed int (uV)\nconst TYPE_DEBUG = 0x3D; // 4bytes debug\n\nfunction bin16dec(bin) {\n    var num=bin&0xFFFF;\n    if (0x8000 & num)\n        num = - (0x010000 - num);\n    return num;\n}\nfunction bin8dec(bin) {\n    var num=bin&0xFF;\n    if (0x80 & num) \n        num = - (0x0100 - num);\n    return num;\n}\nfunction hexToBytes(hex) {\n    for (var bytes = [], c = 0; c < hex.length; c += 2)\n        bytes.push(parseInt(hex.substr(c, 2), 16));\n    return bytes;\n}\n\nfunction DecodeElsysPayload(payload){\n    var obj ={};\n    for(i=0;i<payload.length;i++){\n        switch (payload[i]) {\n        case TYPE_TEMP: //Temperature\n            var temp = (payload[i + 1] << 8) | (payload[i + 2]);\n            temp = bin16dec(temp);\n            obj.temperature = temp / 10;\n            i += 2;\n            break\n        case TYPE_RH: //Humidity\n            var rh = (payload[i + 1]);\n            obj.humidity = rh;\n            i += 1;\n            break\n        case TYPE_ACC: //Acceleration\n            obj.x = bin8dec(payload[i + 1]);\n            obj.y = bin8dec(payload[i + 2]);\n            obj.z = bin8dec(payload[i + 3]);\n            i += 3;\n            break\n        case TYPE_LIGHT: //Light\n            obj.light = (payload[i + 1] << 8) | (payload[i + 2]);\n            i += 2;\n            break\n        case TYPE_MOTION: //Motion sensor(PIR)\n            obj.motion = (payload[i + 1]);\n            i += 1;\n            break\n        case TYPE_CO2: //CO2\n            obj.co2 = (payload[i + 1] << 8) | (payload[i + 2]);\n            i += 2;\n            break\n        case TYPE_VDD: //Battery level\n            obj.vdd = (payload[i + 1] << 8) | (payload[i + 2]);\n            i += 2;\n            break\n        case TYPE_ANALOG1: //Analog input 1\n            obj.analog1 = (payload[i + 1] << 8) | (payload[i + 2]);\n            i += 2;\n            break\n        case TYPE_GPS: //gps\n            i++;\n            obj.lat = (payload[i + 0] | payload[i + 1] << 8 | payload[i + 2] << 16 | (payload[i + 2] & 0x80 ? 0xFF << 24 : 0)) / 10000;\n            obj.long = (payload[i + 3] | payload[i + 4] << 8 | payload[i + 5] << 16 | (payload[i + 5] & 0x80 ? 0xFF << 24 : 0)) / 10000;\n            i += 5;\n            break\n        case TYPE_PULSE1: //Pulse input 1\n            obj.pulse1 = (payload[i + 1] << 8) | (payload[i + 2]);\n            i += 2;\n            break\n        case TYPE_PULSE1_ABS: //Pulse input 1 absolute value\n            var pulseAbs = (payload[i + 1] << 24) | (payload[i + 2] << 16) | (payload[i + 3] << 8) | (payload[i + 4]);\n            obj.pulseAbs = pulseAbs;\n            i += 4;\n            break\n        case TYPE_EXT_TEMP1: //External temp\n            var temp = (payload[i + 1] << 8) | (payload[i + 2]);\n            temp = bin16dec(temp);\n            obj.externalTemperature = temp / 10;\n            i += 2;\n            break\n        case TYPE_EXT_DIGITAL: //Digital input\n            obj.digital = (payload[i + 1]);\n            i += 1;\n            break\n        case TYPE_EXT_DISTANCE: //Distance sensor input\n            obj.distance = (payload[i + 1] << 8) | (payload[i + 2]);\n            i += 2;\n            break\n        case TYPE_ACC_MOTION: //Acc motion\n            obj.accMotion = (payload[i + 1]);\n            i += 1;\n            break\n        case TYPE_IR_TEMP: //IR temperature\n            var iTemp = (payload[i + 1] << 8) | (payload[i + 2]);\n            iTemp = bin16dec(iTemp);\n            var eTemp = (payload[i + 3] << 8) | (payload[i + 4]);\n            eTemp = bin16dec(eTemp);\n            obj.irInternalTemperature = iTemp / 10;\n            obj.irExternalTemperature = eTemp / 10;\n            i += 4;\n            break\n        case TYPE_OCCUPANCY: //Body occupancy\n            obj.occupancy = (payload[i + 1]);\n            i += 1;\n            break\n        case TYPE_WATERLEAK: //Water leak\n            obj.waterleak = (payload[i + 1]);\n            i += 1;\n            break\n        case TYPE_GRIDEYE: //Grideye payload\n            var ref = payload[i+1];\n            i++;\n            obj.grideye = [];\n            for(var j = 0; j < 64; j++) {\n                obj.grideye[j] = ref + (payload[1+i+j] / 10.0);\n            }\n            i += 64;\n            break\n        case TYPE_PRESSURE: //External Pressure\n            var temp = (payload[i + 1] << 24) | (payload[i + 2] << 16) | (payload[i + 3] << 8) | (payload[i + 4]);\n            obj.pressure = temp / 1000;\n            i += 4;\n            break\n        case TYPE_SOUND: //Sound\n            obj.soundPeak = payload[i + 1];\n            obj.soundAvg = payload[i + 2];\n            i += 2;\n            break\n        case TYPE_PULSE2: //Pulse 2\n            obj.pulse2 = (payload[i + 1] << 8) | (payload[i + 2]);\n            i += 2;\n            break\n        case TYPE_PULSE2_ABS: //Pulse input 2 absolute value\n            obj.pulseAbs2 = (payload[i + 1] << 24) | (payload[i + 2] << 16) | (payload[i + 3] << 8) | (payload[i + 4]);\n            i += 4;\n            break\n        case TYPE_ANALOG2: //Analog input 2\n            obj.analog2 = (payload[i + 1] << 8) | (payload[i + 2]);\n            i += 2;\n            break\n        case TYPE_EXT_TEMP2: //External temp 2\n            var temp = (payload[i + 1] << 8) | (payload[i + 2]);\n            temp = bin16dec(temp);\n            if(typeof obj.externalTemperature2 === \"number\") {\n                obj.externalTemperature2 = [obj.externalTemperature2];\n            } \n            if(typeof obj.externalTemperature2 === \"object\") {\n                obj.externalTemperature2.push(temp / 10);\n            } else {\n                obj.externalTemperature2 = temp / 10;\n            }\n            i += 2;\n            break\n        case TYPE_EXT_DIGITAL2: //Digital input 2\n            obj.digital2 = (payload[i + 1]);\n            i += 1;\n            break\n        case TYPE_EXT_ANALOG_UV: //Load cell analog uV\n            obj.analogUv = (payload[i + 1] << 24) | (payload[i + 2] << 16) | (payload[i + 3] << 8) | (payload[i + 4]);\n            i += 4;\n            break\n        default: //somthing is wrong with payload\n            i = payload.length;\n            break\n        }\n    }\n    return obj;\n}\n\nfunction base64ToHex(str) {\n        const raw = atob(str);\n        let result = '';\n        for (let i = 0; i < raw.length; i++) {\n        const hex = raw.charCodeAt(i).toString(16);\n        result += (hex.length === 2 ? hex : '0' + hex);\n        }\n    return result.toUpperCase();\n    }\n    \n\n   function decode(payload, metadata) {\n       let res = {};\n       res = payload;\n       res.metadata = metadata;\n       let dataInHex = base64ToHex(payload.data).toString();\n       res.data = DecodeElsysPayload(hexToBytes(dataInHex));\n       return res;\n    }\n",
+          "image": null,
+          "repository": "os2iot",
+          "lastUpdate": "2025-07-18T20:48:50.269Z",
+          "metadata": {
+            "originalFolder": "Elsys Generic Decoder-1",
+            "codeUrl": "https://raw.githubusercontent.com/OS2iot/OS2iot-payloaddecoders/main/Elsys%20Generic%20Decoder-1/ElsysGenericDecoder-1.js",
+            "readmeUrl": "https://raw.githubusercontent.com/OS2iot/OS2iot-payloaddecoders/main/Elsys%20Generic%20Decoder-1/README.md"
+          },
+          "readme": "# IoT-device model\nWorks for all Elsys ERS and Elsys EMS sensors.\n\n## Transmission type\nLoRaWAN\n\n## Description\nDecoding the bytes from the elsys sensors to meaningfull data values.\n\n## Source\nhttps://www.elsys.se/en/elsys-payload/\n\n## Based on\nhttps://www.elsys.se/en/elsys-payload/ and adjusted for OS2IoT\n\n## Author\nAlexander Ibsen, Govtech Midtjylland,\n\n### Contact\nGithub name: Miniib\nEmail: Alei@aarhus.dk\n"
+        },
+        {
+          "id": "example_payload_decoder",
+          "name": "Example Payload decoder",
+          "description": "Payload decoder for Example Payload decoder",
+          "manufacturer": "Example Payload decoder",
+          "model": "Example Payload decoder",
+          "code": "const TYPE_TEMP = 0x01; //temp 2 bytes -3276.8°C -->3276.7°C\r\nconst TYPE_RH = 0x02; //Humidity 1 byte  0-100%\r\nconst TYPE_ACC = 0x03; //acceleration 3 bytes X,Y,Z -128 --> 127 +/-63=1G\r\nconst TYPE_LIGHT = 0x04; //Light 2 bytes 0-->65535 Lux\r\nconst TYPE_MOTION = 0x05; //No of motion 1 byte  0-255\r\nconst TYPE_CO2 = 0x06; //Co2 2 bytes 0-65535 ppm\r\nconst TYPE_VDD = 0x07; //VDD 2byte 0-65535mV\r\nconst TYPE_ANALOG1 = 0x08; //VDD 2byte 0-65535mV\r\nconst TYPE_GPS = 0x09; //3bytes lat 3bytes long binary\r\nconst TYPE_PULSE1 = 0x0A; //2bytes relative pulse count\r\nconst TYPE_PULSE1_ABS = 0x0B; //4bytes no 0->0xFFFFFFFF\r\nconst TYPE_EXT_TEMP1 = 0x0C; //2bytes -3276.5C-->3276.5C\r\nconst TYPE_EXT_DIGITAL = 0x0D; //1bytes value 1 or 0\r\nconst TYPE_EXT_DISTANCE = 0x0E; //2bytes distance in mm\r\nconst TYPE_ACC_MOTION = 0x0F; //1byte number of vibration/motion\r\nconst TYPE_IR_TEMP = 0x10; //2bytes internal temp 2bytes external temp -3276.5C-->3276.5C\r\nconst TYPE_OCCUPANCY = 0x11; //1byte data\r\nconst TYPE_WATERLEAK = 0x12; //1byte data 0-255\r\nconst TYPE_GRIDEYE = 0x13; //65byte temperature data 1byte ref+64byte external temp\r\nconst TYPE_PRESSURE = 0x14; //4byte pressure data (hPa)\r\nconst TYPE_SOUND = 0x15; //2byte sound data (peak/avg)\r\nconst TYPE_PULSE2 = 0x16; //2bytes 0-->0xFFFF\r\nconst TYPE_PULSE2_ABS = 0x17; //4bytes no 0->0xFFFFFFFF\r\nconst TYPE_ANALOG2 = 0x18; //2bytes voltage in mV\r\nconst TYPE_EXT_TEMP2 = 0x19; //2bytes -3276.5C-->3276.5C\r\nconst TYPE_EXT_DIGITAL2 = 0x1A; // 1bytes value 1 or 0\r\nconst TYPE_EXT_ANALOG_UV = 0x1B; // 4 bytes signed int (uV)\r\nconst TYPE_TVOC = 0x1C; // 2 bytes (ppb)\r\nconst TYPE_DEBUG = 0x3D; // 4bytes debug\r\n\r\nfunction bin16dec(bin) {\r\n    var num = bin & 0xFFFF;\r\n    if (0x8000 & num)\r\n        num = -(0x010000 - num);\r\n    return num;\r\n}\r\n\r\nfunction bin8dec(bin) {\r\n    var num = bin & 0xFF;\r\n    if (0x80 & num)\r\n        num = -(0x0100 - num);\r\n    return num;\r\n}\r\n\r\nfunction hexToBytes(hex) {\r\n    for (var bytes = [], c = 0; c < hex.length; c += 2)\r\n        bytes.push(parseInt(hex.substr(c, 2), 16));\r\n    return bytes;\r\n}\r\n\r\nfunction base64ToHex(str) {\r\n  const raw = atob(str);\r\n  let result = '';\r\n  for (let i = 0; i < raw.length; i++) {\r\n    const hex = raw.charCodeAt(i).toString(16);\r\n    result += (hex.length === 2 ? hex : '0' + hex);\r\n  }\r\n  return result.toUpperCase();\r\n}\r\n\r\nfunction decode(payload, metadata) {\r\n    ndata = base64ToHex(payload.data);\r\n\r\n    let data = hexToBytes(ndata);\r\n    var obj = new Object();\r\n    for (i = 0; i < data.length; i++) {\r\n        //console.log(data[i]);\r\n        switch (data[i]) {\r\n        case TYPE_TEMP: //Temperature\r\n            var temp = (data[i + 1] << 8) | (data[i + 2]);\r\n            temp = bin16dec(temp);\r\n            obj.temperature = temp / 10;\r\n            i += 2;\r\n            break\r\n        case TYPE_RH: //Humidity\r\n            var rh = (data[i + 1]);\r\n            obj.humidity = rh;\r\n            i += 1;\r\n            break\r\n        case TYPE_ACC: //Acceleration\r\n            obj.x = bin8dec(data[i + 1]);\r\n            obj.y = bin8dec(data[i + 2]);\r\n            obj.z = bin8dec(data[i + 3]);\r\n            i += 3;\r\n            break\r\n        case TYPE_LIGHT: //Light\r\n            obj.light = (data[i + 1] << 8) | (data[i + 2]);\r\n            i += 2;\r\n            break\r\n        case TYPE_MOTION: //Motion sensor(PIR)\r\n            obj.motion = (data[i + 1]);\r\n            i += 1;\r\n            break\r\n        case TYPE_CO2: //CO2\r\n            obj.co2 = (data[i + 1] << 8) | (data[i + 2]);\r\n            i += 2;\r\n            break\r\n        case TYPE_VDD: //Battery level\r\n            obj.vdd = (data[i + 1] << 8) | (data[i + 2]);\r\n            i += 2;\r\n            break\r\n        case TYPE_ANALOG1: //Analog input 1\r\n            obj.analog1 = (data[i + 1] << 8) | (data[i + 2]);\r\n            i += 2;\r\n            break\r\n        case TYPE_GPS: //gps\r\n            i++;\r\n            obj.lat = (data[i + 0] | data[i + 1] << 8 | data[i + 2] << 16 | (data[i + 2] & 0x80 ? 0xFF << 24 : 0)) / 10000;\r\n            obj.long = (data[i + 3] | data[i + 4] << 8 | data[i + 5] << 16 | (data[i + 5] & 0x80 ? 0xFF << 24 : 0)) / 10000;\r\n            i += 5;\r\n            break\r\n        case TYPE_PULSE1: //Pulse input 1\r\n            obj.pulse1 = (data[i + 1] << 8) | (data[i + 2]);\r\n            i += 2;\r\n            break\r\n        case TYPE_PULSE1_ABS: //Pulse input 1 absolute value\r\n            var pulseAbs = (data[i + 1] << 24) | (data[i + 2] << 16) | (data[i + 3] << 8) | (data[i + 4]);\r\n            obj.pulseAbs = pulseAbs;\r\n            i += 4;\r\n            break\r\n        case TYPE_EXT_TEMP1: //External temp\r\n            var temp = (data[i + 1] << 8) | (data[i + 2]);\r\n            temp = bin16dec(temp);\r\n            obj.externalTemperature = temp / 10;\r\n            i += 2;\r\n            break\r\n        case TYPE_EXT_DIGITAL: //Digital input\r\n            obj.digital = (data[i + 1]);\r\n            i += 1;\r\n            break\r\n        case TYPE_EXT_DISTANCE: //Distance sensor input\r\n            obj.distance = (data[i + 1] << 8) | (data[i + 2]);\r\n            i += 2;\r\n            break\r\n        case TYPE_ACC_MOTION: //Acc motion\r\n            obj.accMotion = (data[i + 1]);\r\n            i += 1;\r\n            break\r\n        case TYPE_IR_TEMP: //IR temperature\r\n            var iTemp = (data[i + 1] << 8) | (data[i + 2]);\r\n            iTemp = bin16dec(iTemp);\r\n            var eTemp = (data[i + 3] << 8) | (data[i + 4]);\r\n            eTemp = bin16dec(eTemp);\r\n            obj.irInternalTemperature = iTemp / 10;\r\n            obj.irExternalTemperature = eTemp / 10;\r\n            i += 4;\r\n            break\r\n        case TYPE_OCCUPANCY: //Body occupancy\r\n            obj.occupancy = (data[i + 1]);\r\n            i += 1;\r\n            break\r\n        case TYPE_WATERLEAK: //Water leak\r\n            obj.waterleak = (data[i + 1]);\r\n            i += 1;\r\n            break\r\n        case TYPE_GRIDEYE: //Grideye data\r\n            var ref = data[i+1];\r\n            i++;\r\n            obj.grideye = [];\r\n            for(var j = 0; j < 64; j++) {\r\n                obj.grideye[j] = ref + (data[1+i+j] / 10.0);\r\n            }\r\n            i += 64;\r\n            break\r\n        case TYPE_PRESSURE: //External Pressure\r\n            var temp = (data[i + 1] << 24) | (data[i + 2] << 16) | (data[i + 3] << 8) | (data[i + 4]);\r\n            obj.pressure = temp / 1000;\r\n            i += 4;\r\n            break\r\n        case TYPE_SOUND: //Sound\r\n            obj.soundPeak = data[i + 1];\r\n            obj.soundAvg = data[i + 2];\r\n            i += 2;\r\n            break\r\n        case TYPE_PULSE2: //Pulse 2\r\n            obj.pulse2 = (data[i + 1] << 8) | (data[i + 2]);\r\n            i += 2;\r\n            break\r\n        case TYPE_PULSE2_ABS: //Pulse input 2 absolute value\r\n            obj.pulseAbs2 = (data[i + 1] << 24) | (data[i + 2] << 16) | (data[i + 3] << 8) | (data[i + 4]);\r\n            i += 4;\r\n            break\r\n        case TYPE_ANALOG2: //Analog input 2\r\n            obj.analog2 = (data[i + 1] << 8) | (data[i + 2]);\r\n            i += 2;\r\n            break\r\n        case TYPE_EXT_TEMP2: //External temp 2\r\n            var temp = (data[i + 1] << 8) | (data[i + 2]);\r\n            temp = bin16dec(temp);\r\n            if(typeof obj.externalTemperature2 === \"number\") {\r\n                obj.externalTemperature2 = [obj.externalTemperature2];\r\n            } \r\n            if(typeof obj.externalTemperature2 === \"object\") {\r\n                obj.externalTemperature2.push(temp / 10);\r\n            } else {\r\n                obj.externalTemperature2 = temp / 10;\r\n            }\r\n            i += 2;\r\n            break\r\n        case TYPE_EXT_DIGITAL2: //Digital input 2\r\n            obj.digital2 = (data[i + 1]);\r\n            i += 1;\r\n            break\r\n        case TYPE_EXT_ANALOG_UV: //Load cell analog uV\r\n            obj.analogUv = (data[i + 1] << 24) | (data[i + 2] << 16) | (data[i + 3] << 8) | (data[i + 4]);\r\n            i += 4;\r\n            break\r\n        case TYPE_TVOC:\r\n            obj.tvoc = (data[i + 1] << 8) | (data[i + 2]);\r\n            i += 2;\r\n            break\r\n        default: //somthing is wrong with data\r\n            i = data.length;\r\n            break\r\n        }\r\n    }\r\n\r\n    payload.data = obj;\r\n    payload.deviceId = payload.devEUI;\r\n    \r\n    let returnVal = {...payload.data};\r\n    returnVal.deviceId = payload.deviceId;\r\n    returnVal.location = metadata.location;\r\n    returnVal.commentOnLocation = metadata.commentOnLocation;\r\n    \r\n    return returnVal;\r\n}\r\n",
+          "image": null,
+          "repository": "os2iot",
+          "lastUpdate": "2025-07-18T20:48:50.862Z",
+          "metadata": {
+            "originalFolder": "Example Payload decoder",
+            "codeUrl": "https://raw.githubusercontent.com/OS2iot/OS2iot-payloaddecoders/main/Example%20Payload%20decoder/Example_PayloadDecoder-1.js",
+            "readmeUrl": "https://raw.githubusercontent.com/OS2iot/OS2iot-payloaddecoders/main/Example%20Payload%20decoder/README.md"
+          },
+          "readme": "# IoT-device model\nExample Payload decoder\n\n## Transmission type\nLoRaWAN\n\n## Description\nThis is used to decode a payload from an Example IoT-device to convert the tempature to celcius.\n\n## Source\nMade from scratch, so no source available.\n\n## Based on\nNone.\n\n## Author\n* Mogens Kjeldsen, OS2\n* GitHub user: ramogens \n\n### Contact\nGitHub user: ramogens \n"
+        },
+        {
+          "id": "imbuildings_people-counter-1",
+          "name": "IMBUILDINGS People Counter 1",
+          "description": "Payload decoder for IMBUILDINGS_People-Counter-1",
+          "manufacturer": "IMBUILDINGS",
+          "model": "People Counter 1",
+          "code": "function bin16dec(bin) {\n        var num = bin & 0xffff;\n        if (0x8000 & num) num = -(0x010000 - num);\n        return num;\n      }\n    function bin8dec(bin) {\n        var num = bin & 0xff;\n        if (0x80 & num) num = -(0x0100 - num);\n        return num;\n      }\n    function base64ToBytes(str) {\n        return atob(str)\n          .split(\"\")\n          .map(function (c) {\n            return c.charCodeAt(0);\n          });\n      }\n    function hexToBytes(hex) {\n        for (var bytes = [], c = 0; c < hex.length; c += 2)\n          bytes.push(parseInt(hex.substr(c, 2), 16));\n        return bytes;\n      }\n\n// Decode decodes an array of bytes into an object.\n//  - fPort contains the LoRaWAN fPort number\n//  - bytes is an array of bytes, e.g. [225, 230, 255, 0]\n//  - variables contains the device variables e.g. {\"calibration\": \"3.5\"} (both the key / value are of type string)\n// The function must return an object, e.g. {\"temperature\": 22.5}\nfunction decode(payload, metadata) {\n  let res = {};\n  res.payload = payload;\n  payloadHEX = base64ToHex(payload.data);\n  res.payload.data = Decoder(getHex(payloadHEX), payload.fPort );\n  return res;\n}\n\n\n/** Helper functions **/\n\nfunction decodeToString(payload) {\n  return String.fromCharCode.apply(String, payload);\n}\n\nfunction decodeToJson(payload) {\n  // covert payload to string.\n  var str = decodeToString(payload);\n\n  // parse string to JSON\n  var data = JSON.parse(str);\n  return data;\n}\n\nfunction base64ToHex(str) {\n    const raw = atob(str);\n    let result = '';\n    for (let i = 0; i < raw.length; i++) {\n    const hex = raw.charCodeAt(i).toString(16);\n    result += (hex.length === 2 ? hex : '0' + hex);\n    }\nreturn result.toUpperCase();\n}\n\nfunction getHex(val) {\n  if (val.startsWith(\"0x\") || val.startsWith(\"0X\")) {\n    val = val.substring(2); //get rid of starting '0x'\n  }\n\n  var numBytes = val.length / 2;\n  var bytes = [];\n\n  for (var i = 0; i < numBytes; i++) {\n    bytes.push(parseInt(val.substring(i * 2, i * 2 + 2), 16));\n  }\n\n  return bytes;\n}\n\nfunction Decoder(bytes, fPort) {\n  var d = {};\n\n  \t  var p = {\n        bytes: bytes,\n        fPort: fPort\n      }\n  \n      if(!containsIMBHeader(p.bytes)){\n        //When payload doesn't contain IMBuildings header\n        //Assumes that payload is transmitted on specific fport\n        //e.g. payload type 2 variant 6 on FPort 26, type 2 variant 7 on FPort 27 and so on...\n        switch(p.fPort){\n            case 26:\n                if(p.bytes.length != 13){\n                    return { errors: ['Unable to detect correct payload. Please check your device configuration']};\n                }\n\n                d.payload_type = 2;\n                d.payload_variant = 6;\n                break;\n            case 27:\n                if(p.bytes.length != 5){\n                    return { errors: ['Unable to detect correct payload. Please check your device configuration']};\n                }\n\n                d.payload_type = 2;\n                d.payload_variant = 7;\n                break;\n            case 28:\n                if(p.bytes.length != 4){\n                    return { errors: ['Unable to detect correct payload. Please check your device configuration']};\n                }\n\n                d.payload_type = 2;\n                d.payload_variant = 8;\n\n                break;\n            default:\n                return { errors: ['Unable to detect correct payload. Please check your device configuration']};\n        }\n    }else{\n        d.payload_type = p.bytes[0];\n        d.payload_variant = p.bytes[1];\n        d.device_id = toHEXString(p.bytes, 2, 8)\n    }\n\n    switch(d.payload_variant){\n        case 0x06:\n            d.device_status = p.bytes[p.bytes.length - 13];\n            d.battery_voltage = readUInt16BE(p.bytes, p.bytes.length - 12) / 100;\n            d.counter_a = readUInt16BE(p.bytes, p.bytes.length - 10);\n            d.counter_b = readUInt16BE(p.bytes, p.bytes.length - 8);\n            d.sensor_status = p.bytes[p.bytes.length - 6];\n            d.total_counter_a = readUInt16BE(p.bytes, p.bytes.length - 5);\n            d.total_counter_b = readUInt16BE(p.bytes, p.bytes.length - 3);\n            d.payload_counter = p.bytes[p.bytes.length - 1];\n            break;\n        case 0x07:\n            d.sensor_status = p.bytes[p.bytes.length - 5];\n            d.total_counter_a = readUInt16BE(p.bytes, p.bytes.length - 4);\n            d.total_counter_b = readUInt16BE(p.bytes, p.bytes.length - 2);\n            break;\n        case 0x08:\n            d.device_status = p.bytes[p.bytes.length - 4];\n            d.battery_voltage = readUInt16BE(p.bytes, p.bytes.length - 3) / 100;\n            d.sensor_status = p.bytes[p.bytes.length - 1];\n            break;\n    }\n  \n  return d;\n}\n\nfunction containsIMBHeader(p){\n    if(p[0] == 0x02 && p[1] == 0x06 && p.length == 23) return true;\n    if(p[0] == 0x02 && p[1] == 0x07 && p.length == 15) return true;\n    if(p[0] == 0x02 && p[1] == 0x08 && p.length == 14) return true;\n\n    return false;\n}\n\n\n\n//Helper functions\nfunction bcd(dec) {\n\treturn ((dec / 10) << 4) + (dec % 10);\n}\n\nfunction unbcd(bcd) {\n\treturn ((bcd >> 4) * 10) + bcd % 16;\n}\n\nfunction toHEXString(payload, index, length){\n    var HEXString = '';\n\n    for(var i = 0; i < length; i++){\n        if(payload[index + i] < 16){\n            HEXString = HEXString + '0';\n        }\n        HEXString = HEXString + payload[index + i].toString(16);\n    }\n\n    return HEXString;\n}\n\nfunction readInt16BE(payload, index){\n    var int16 = (payload[index] << 8) + payload[++index];\n\n    if(int16 & 0x8000){\n        int16 = - (0x10000 - int16);\n    }\n\n    return int16;\n}\n\nfunction readUInt16BE(payload, index){\n    return (payload[index] << 8) + payload[++index];\n}\n\nfunction readInt8(payload, index){\n    var int8 = payload[index];\n\n    if(int8 & 0x80){\n        int8 = - (0x100 - int8);\n    }\n\n    return int8;\n}\n    \n",
+          "image": null,
+          "repository": "os2iot",
+          "lastUpdate": "2025-07-18T20:48:51.403Z",
+          "metadata": {
+            "originalFolder": "IMBUILDINGS_People-Counter-1",
+            "codeUrl": "https://raw.githubusercontent.com/OS2iot/OS2iot-payloaddecoders/main/IMBUILDINGS_People-Counter-1/imbuilding_peopleCounter-1.js",
+            "readmeUrl": "https://raw.githubusercontent.com/OS2iot/OS2iot-payloaddecoders/main/IMBUILDINGS_People-Counter-1/README.md"
+          },
+          "readme": "# IoT-device model\nWorks for IMBUILDINGS People Counter\n\n## Transmission type\nLoRaWAN & NB-iot\n\n## Description\nDecoding the bytes from the IMBUILDINGS People Counter to meaningful data values.\n\n## Source\nNone.\n\n## Based on\nhttps://github.com/IMBUILDINGS/PayloadParser\n\n## Author\nAlexander Ibsen, Govtech Midtjylland,\n\n### Contact\nGithub name: Miniib\nEmail: Alei@aarhus.dk\n"
+        },
+        {
+          "id": "milesight_wts305_wts506_weather_station",
+          "name": "Milesight WTS305 WTS506 Weather Station",
+          "description": "Payload decoder for Milesight WTS305 WTS506 Weather Station",
+          "manufacturer": "Milesight",
+          "model": "Milesight WTS305 WTS506 Weather Station",
+          "code": "// OS2IOT - Kristian Risager Larsen, Aarhus Kommune, 2025-06\n\n/* If the sensor parts are not connected, the data will look like this:\n\n{\n  \"battery\": 10,\n  \"temperature\": -0.1,\n  \"humidity\": 127.5,\n  \"wind_direction\": -0.1,\n  \"pressure\": 6553.5,\n  \"wind_speed\": 6553.5\n}\n\n*/\n\n\n    function decode(payload, metadata) {\n        let res = {};\n        //res.some_field = \"some value\"\n\n        let timestamp = new Date(payload.rxInfo[0].nsTime).toISOString();\n\n        payload.bytes = base64ToBytes(payload.data)\n\n        decoded = milesightDeviceDecode(payload.bytes)\n\n        let sensorId = payload.deviceInfo.devEui.slice(-6);\n\n        // https://github.com/sj-doyle/NGSI-LD-Entities/blob/master/definitions/Weather-Observed.md\n\n        res.id = \"WeatherObserved:\" + sensorId + \"-Milesight\";\n        res.type=  \"WeatherObserved\"\n\n\n        // debug\n        //res.decoded = decoded;\n\n        decoded = decoded[0];\n\n        \n\n        if (decoded.hasOwnProperty(\"battery\")) {\n            res.battery =  {\n                \"type\": \"Property\",\n                \"value\": decoded.battery,\n                \"observedAt\": timestamp\n            }\n        }\n\n        if (decoded.hasOwnProperty(\"temperature\")) {\n            res.temperature =  {\n                \"type\": \"Property\",\n                \"value\": decoded.temperature,\n                \"observedAt\": timestamp,\n                \"unitCode\": \"CEL\"\n            }\n        }\n\n\n        if (decoded.hasOwnProperty(\"humidity\")) {\n            res.relativeHumidity =  {\n                \"type\": \"Property\",\n                \"value\": decoded.humidity,\n                \"observedAt\": timestamp,\n                \"unitCode\": \"C62\"\n            }\n        }\n\n\n        if (decoded.hasOwnProperty(\"wind_direction\")) {\n            res.windDirection =  {\n                \"type\": \"Property\",\n                \"value\": decoded.wind_direction,\n                \"observedAt\": timestamp,\n                \"unitCode\": \"DD\"\n            }\n        }\n\n        if (decoded.hasOwnProperty(\"wind_speed\")) {\n            res.windSpeed =  {\n                \"type\": \"Property\",\n                \"value\": decoded.wind_speed,\n                \"observedAt\": timestamp,\n                \"unitCode\": \"MTS\"\n            }\n        }\n\n        if (decoded.hasOwnProperty(\"pressure\")) {\n            res.atmosphericPressure =  {\n                \"type\": \"Property\",\n                \"value\": decoded.pressure,\n                \"observedAt\": timestamp,\n                \"unitCode\": \"hPa\"\n            }\n        }\n\n        /*res.location = {\n                \"type\": \"GeoProperty\",\n                \"value\": {\n                    \"type\": \"Point\",\n                    \"coordinates\":[Number(metadata.location.coordinates[0]), Number(metadata.location.coordinates[1])]\n                }        \n        }*/\n\n        return [res];\n      }\n      \n\n// helper functions\nfunction bin16dec(bin) {\n        var num = bin & 0xffff;\n        if (0x8000 & num) num = -(0x010000 - num);\n        return num;\n      }\n    function bin8dec(bin) {\n        var num = bin & 0xff;\n        if (0x80 & num) num = -(0x0100 - num);\n        return num;\n      }\n    function base64ToBytes(str) {\n        return atob(str)\n          .split(\"\")\n          .map(function (c) {\n            return c.charCodeAt(0);\n          });\n      }\n    function hexToBytes(hex) {\n        for (var bytes = [], c = 0; c < hex.length; c += 2)\n          bytes.push(parseInt(hex.substr(c, 2), 16));\n        return bytes;\n      }\n      \n      \n/**\n * Payload Decoder\n *\n * Copyright 2024 Milesight IoT\n *\n * @product WTS305 / WTS506\n */\n// Chirpstack v4\nfunction decodeUplink(input) {\n    var decoded = milesightDeviceDecode(input.bytes);\n    return { data: decoded };\n}\n\n// Chirpstack v3\nfunction Decode(fPort, bytes) {\n    return milesightDeviceDecode(bytes);\n}\n\n// The Things Network\nfunction Decoder(bytes, port) {\n    return milesightDeviceDecode(bytes);\n}\n\nfunction milesightDeviceDecode(bytes) {\n    var decoded = {};\n\n    for (var i = 0; i < bytes.length; ) {\n        var channel_id = bytes[i++];\n        var channel_type = bytes[i++];\n        // BATTERY\n        if (channel_id === 0x01 && channel_type === 0x75) {\n            decoded.battery = bytes[i];\n            i += 1;\n        }\n        // TEMPERATURE\n        else if (channel_id === 0x03 && channel_type === 0x67) {\n            // ℃\n            decoded.temperature = readInt16LE(bytes.slice(i, i + 2)) / 10;\n            i += 2;\n\n            // ℉\n            // decoded.temperature = readInt16LE(bytes.slice(i, i + 2)) / 10 * 1.8 + 32;\n            // i +=2;\n        }\n        // HUMIDITY\n        else if (channel_id === 0x04 && channel_type === 0x68) {\n            decoded.humidity = bytes[i] / 2;\n            i += 1;\n        }\n        // Wind Direction, unit degree\n        else if (channel_id === 0x05 && channel_type === 0x84) {\n            decoded.wind_direction = readInt16LE(bytes.slice(i, i + 2)) / 10;\n            i += 2;\n        }\n        // Barometric Pressure, unit hPa\n        else if (channel_id === 0x06 && channel_type === 0x73) {\n            decoded.pressure = readUInt16LE(bytes.slice(i, i + 2)) / 10;\n            i += 2;\n        }\n        // Wind Speed, unit m/s\n        else if (channel_id === 0x07 && channel_type === 0x92) {\n            decoded.wind_speed = readUInt16LE(bytes.slice(i, i + 2)) / 10;\n            i += 2;\n        }\n        // rainfall_total, unit mm, Frame counter to define whether device enters the new rainfall accumulation phase, it will plus 1 every upload, range: 0~255\n        else if (channel_id === 0x08 && channel_type === 0x77) {\n            decoded.rainfall_total = readUInt16LE(bytes.slice(i, i + 2)) / 100;\n            decoded.rainfall_counter = bytes[i + 2];\n            i += 3;\n        } else {\n            break;\n        }\n    }\n\n    return [decoded];\n}\n\n/* ******************************************\n * bytes to number\n ********************************************/\nfunction readUInt16LE(bytes) {\n    var value = (bytes[1] << 8) + bytes[0];\n    return value & 0xffff;\n}\n\nfunction readInt16LE(bytes) {\n    var ref = readUInt16LE(bytes);\n    return ref > 0x7fff ? ref - 0x10000 : ref;\n}\n\n\n",
+          "image": null,
+          "repository": "os2iot",
+          "lastUpdate": "2025-07-18T20:48:51.953Z",
+          "metadata": {
+            "originalFolder": "Milesight WTS305 WTS506 Weather Station",
+            "codeUrl": "https://raw.githubusercontent.com/OS2iot/OS2iot-payloaddecoders/main/Milesight%20WTS305%20WTS506%20Weather%20Station/Milesight%20WTS305%20WTS506%20Weather%20Station.js",
+            "readmeUrl": "https://raw.githubusercontent.com/OS2iot/OS2iot-payloaddecoders/main/Milesight%20WTS305%20WTS506%20Weather%20Station/README.md"
+          },
+          "readme": "# IoT-device model\nMilesight WTS305 Weather Station\n[Milesight WTS506 Weather Station](https://www.milesight.com/iot/product/lorawan-sensor/wts506)\n\n## Transmission type\nLoRaWAN\n\n## Description\nIf the sensor parts are not connected, the data will look like this:\n\n```js\n{\n  \"battery\": 10,\n  \"temperature\": -0.1,\n  \"humidity\": 127.5,\n  \"wind_direction\": -0.1,\n  \"pressure\": 6553.5,\n  \"wind_speed\": 6553.5\n}\n```\n\n## Source\nhttps://github.com/Milesight-IoT/SensorDecoders/tree/main/WTS_series\n\n## Based on\nhttps://github.com/Milesight-IoT/SensorDecoders/tree/main/WTS_series\n\nhttps://github.com/sj-doyle/NGSI-LD-Entities/blob/master/definitions/Weather-Observed.md\n\n\n\n## Author\n* Kristian Risager Larsen, Aarhus Kommune\n* GitHub user: kristianrl \n\n### Contact\niotlab@aarhus.dk\n"
+        },
+        {
+          "id": "milesight_em320-th-1",
+          "name": "Milesight EM320 TH 1",
+          "description": "Payload decoder for Milesight_EM320-TH-1",
+          "manufacturer": "Milesight",
+          "model": "EM320 TH 1",
+          "code": "/**\n * Payload Decoder for OS2IoT\n * \n * Copyright 2022 Milesight IoT\n * @product EM320-TH\n * \n * Adjusted to support OS2IoT by iotlab@aarhus.dk \n * Last update june 2024\n */\nfunction Decoder(bytes, fPort) {\n    var decoded = {};\n\n    for (var i = 0; i < bytes.length;) {\n        var channel_id = bytes[i++];\n        var channel_type = bytes[i++];\n\n        // BATTERY\n        if (channel_id === 0x01 && channel_type === 0x75) {\n            decoded.battery = bytes[i];\n            i += 1;\n        }\n        // TEMPERATURE\n        else if (channel_id === 0x03 && channel_type === 0x67) {\n            // ℃\n            decoded.temperature = readInt16LE(bytes.slice(i, i + 2)) / 10;\n            i += 2;\n\n            // ℉\n            // decoded.temperature = readInt16LE(bytes.slice(i, i + 2)) / 10 * 1.8 + 32;\n            // i +=2;\n        }\n        // HUMIDITY\n        else if (channel_id === 0x04 && channel_type === 0x68) {\n            decoded.humidity = bytes[i] / 2;\n            i += 1;\n        }\n        // TEMPERATURE & HUMIDITY HISTROY\n        else if (channel_id === 0x20 && channel_type === 0xce) {\n            var point = {};\n            point.timestamp = readUInt32LE(bytes.slice(i, i + 4));\n            point.temperature = readInt16LE(bytes.slice(i + 4, i + 6)) / 10;\n            point.humidity = bytes[i + 6] / 2;\n            decoded.history = decoded.history || [];\n            decoded.history.push(point);\n            i += 7;\n        } else {\n            break;\n        }\n    }\n\n    return decoded;\n}\n\n/* ******************************************\n * bytes to number\n ********************************************/\nfunction readUInt16LE(bytes) {\n    var value = (bytes[1] << 8) + bytes[0];\n    return value & 0xffff;\n}\n\nfunction readInt16LE(bytes) {\n    var ref = readUInt16LE(bytes);\n    return ref > 0x7fff ? ref - 0x10000 : ref;\n}\n\nfunction readUInt32LE(bytes) {\n    var value = (bytes[3] << 24) + (bytes[2] << 16) + (bytes[1] << 8) + bytes[0];\n    return (value & 0xFFFFFFFF);\n}\n\n    function decode(payload, metadata) {\n        let res = {};\n        let sensorId = payload.devEUI.slice(-4);\n        res.id = \"refrigerator-sensor:\" + sensorId + \"-Milesight\";\n        res.type=  \"refrigerator-sensor\"\n        let rawPayload = base64ToHex(payload.data);\n        let decoded = Decoder(getHex(rawPayload), payload.fPort );\n        let timestamp = payload.rxInfo[0].time;\n        \n        //res.decodedPayload = decoded\n\n        res.name =  {\n\n            \"type\": \"Property\",\n            \"value\": metadata.name\n        }\n        \n        if (decoded.hasOwnProperty(\"temperature\"))\n        {\n            res.temperature =  {\n\n                        \"type\": \"Property\",\n                        \"value\": decoded.temperature,\n                        \"observedAt\": timestamp\n            }\n        }\n\n        if (decoded.hasOwnProperty(\"humidity\"))\n        {\n            res.humidity =  {\n\n                        \"type\": \"Property\",\n                        \"value\": decoded.humidity,\n                        \"observedAt\": timestamp\n            }\n        }\n        if (decoded.hasOwnProperty(\"battery\"))\n        {\n            res.battery =  {\n\n                        \"type\": \"Property\",\n                        \"value\": decoded.battery,\n                        \"observedAt\": timestamp\n            }\n        }        \n\n       return [res];\n      }\n\n\n/** Helper functions **/\n\nfunction decodeToString(payload) {\n  return String.fromCharCode.apply(String, payload);\n}\n\nfunction decodeToJson(payload) {\n  // covert payload to string.\n  var str = decodeToString(payload);\n\n  // parse string to JSON\n  var data = JSON.parse(str);\n  return data;\n}\n\nfunction base64ToHex(str) {\n    const raw = atob(str);\n    let result = '';\n    for (let i = 0; i < raw.length; i++) {\n    const hex = raw.charCodeAt(i).toString(16);\n    result += (hex.length === 2 ? hex : '0' + hex);\n    }\nreturn result.toUpperCase();\n}\n\nfunction getHex(val) {\n  if (val.startsWith(\"0x\") || val.startsWith(\"0X\")) {\n    val = val.substring(2); //get rid of starting '0x'\n  }\n\n  var numBytes = val.length / 2;\n  var bytes = [];\n\n  for (var i = 0; i < numBytes; i++) {\n    bytes.push(parseInt(val.substring(i * 2, i * 2 + 2), 16));\n  }\n\n  return bytes;\n}\n",
+          "image": null,
+          "repository": "os2iot",
+          "lastUpdate": "2025-07-18T20:48:52.493Z",
+          "metadata": {
+            "originalFolder": "Milesight_EM320-TH-1",
+            "codeUrl": "https://raw.githubusercontent.com/OS2iot/OS2iot-payloaddecoders/main/Milesight_EM320-TH-1/Milesight_EM320-TH-1.js",
+            "readmeUrl": "https://raw.githubusercontent.com/OS2iot/OS2iot-payloaddecoders/main/Milesight_EM320-TH-1/README.md"
+          },
+          "readme": "# IoT-device model\nMilesight EM320-TH\n\n## Transmission type\nLoRaWAN\n\n## Description\nDecode data from the sensor. Data model is compatible with NGSI-LD. \n\n## Example output data\n````JSON\n{\n        \"id\": \"refrigerator-sensor:1234-Milesight\",\n        \"type\": \"refrigerator-sensor\",\n        \"name\": {\n            \"type\": \"Property\",\n            \"value\": \"EM320-1234\"\n        },\n        \"temperature\": {\n            \"type\": \"Property\",\n            \"value\": 5.6,\n            \"observedAt\": \"2024-07-02T12:26:21.58737Z\"\n        },\n        \"humidity\": {\n            \"type\": \"Property\",\n            \"value\": 94,\n            \"observedAt\": \"2024-07-02T12:26:21.58737Z\"\n        },\n        \"battery\": {\n            \"type\": \"Property\",\n            \"value\": 98,\n            \"observedAt\": \"2024-07-02T12:26:21.58737Z\"\n        }\n    }\n```` \n\n## Source\nhttps://github.com/Milesight-IoT/SensorDecoders/tree/main/EM_Series/EM300_Series/EM320-TH\n\n## Based on\nMilesights own decoder. Adjusted for OS2Iot\n\n## Author\nminiib (Github)\n\n### Contact\nAlexander Ibsen, alei@aarhus.dk\n"
+        },
+        {
+          "id": "milesight_ws302-1",
+          "name": "Milesight WS302 1",
+          "description": "Payload decoder for Milesight_WS302-1",
+          "manufacturer": "Milesight",
+          "model": "WS302 1",
+          "code": "/**\n * Payload Decoder for OS2IoT\n *\n * Copyright 2022 Milesight IoT\n * @product WS302\n * \n * Adjusted to support OS2IoT by iotlab@aarhus.dk \n * Last update june 2024\n */\n\nfunction Decoder(bytes, fPort) {\n    var decoded = {};\n\n    for (var i = 0; i < bytes.length; ) {\n        var channel_id = bytes[i++];\n        var channel_type = bytes[i++];\n\n        // BATTERY\n        if (channel_id === 0x01 && channel_type === 0x75) {\n            decoded.battery = bytes[i];\n            i += 1;\n        }\n        // SOUND\n        else if (channel_id === 0x05 && channel_type === 0x5b) {\n            decoded.freq_weight = readFrequecyWeightType(bytes[i]);\n            decoded.time_weight = readTimeWeightType(bytes[i]);\n            decoded.la = readUInt16LE(bytes.slice(i + 1, i + 3)) / 10;\n            decoded.laeq = readUInt16LE(bytes.slice(i + 3, i + 5)) / 10;\n            decoded.lamax = readUInt16LE(bytes.slice(i + 5, i + 7)) / 10;\n            i += 7;\n        }\n        // LoRaWAN Class Type\n        else if (channel_id === 0xff && channel_type === 0x0f) {\n            switch (bytes[i]) {\n                case 0:\n                    decoded.class_type = \"class-a\";\n                    break;\n                case 1:\n                    decoded.class_type = \"class-b\";\n                    break;\n                case 2:\n                    decoded.class_type = \"class-c\";\n                    break;\n            }\n            i += 1;\n        } else {\n            break;\n        }\n    }\n\n    return decoded;\n}\n\nfunction readFrequecyWeightType(bytes) {\n    var type = \"\";\n    \n    var bits = bytes & 0x03;\n    switch (bits) {\n        case 0:\n            type = \"Z\";\n            break;\n        case 1:\n            type = \"A\";\n            break;\n        case 2:\n            type = \"C\";\n            break;\n    }\n\n    return type;\n}\n\nfunction readTimeWeightType(bytes) {\n    var type = \"\";\n\n    var bits = (bytes[0] >> 2) & 0x03;\n    switch (bits) {\n        case 0:\n            type = \"impulse\";\n            break;\n        case 1:\n            type = \"fast\";\n            break;\n        case 2:\n            type = \"slow\";\n            break;\n    }\n\n    return type;\n}\n\nfunction readUInt16LE(bytes) {\n    var value = (bytes[1] << 8) + bytes[0];\n    return value & 0xffff;\n}\n\nfunction readInt16LE(bytes) {\n    var ref = readUInt16LE(bytes);\n    return ref > 0x7fff ? ref - 0x10000 : ref;\n}\n\n\nfunction decode(payload, metadata) {\n    let res = {};\n    let sensorId = payload.devEUI.slice(-4);\n    res.id = \"soundlevel-sensor:\" + sensorId + \"-Milesight\";\n    res.type=  \"soundlevel-sensor\"\n    let rawPayload = base64ToHex(payload.data);\n    let decoded = Decoder(getHex(rawPayload), payload.fPort );\n    let timestamp = payload.rxInfo[0].time;\n    \n    //res.decodedPayload = decoded\n\n    res.name =  {\n        \"type\": \"Property\",\n        \"value\": metadata.name\n    }\n    \n    if (decoded.hasOwnProperty(\"la\"))\n    {\n        res.la =  {\n                    \"type\": \"Property\",\n                    \"value\": decoded.la,\n                    \"observedAt\": timestamp\n        }\n    }\n\n        if (decoded.hasOwnProperty(\"laeq\"))\n    {\n        res.laeq =  {\n                    \"type\": \"Property\",\n                    \"value\": decoded.laeq,\n                    \"observedAt\": timestamp\n        }\n    }\n\n    if (decoded.hasOwnProperty(\"lamax\"))\n    {\n        res.lamax =  {\n                    \"type\": \"Property\",\n                    \"value\": decoded.lamax,\n                    \"observedAt\": timestamp\n        }\n    }\n    if (decoded.hasOwnProperty(\"battery\"))\n    {\n        res.battery =  {\n                    \"type\": \"Property\",\n                    \"value\": decoded.battery,\n                    \"observedAt\": timestamp\n        }\n   return [res];\n}\n}\n\n\n/** Helper functions **/\n\nfunction decodeToString(payload) {\n  return String.fromCharCode.apply(String, payload);\n}\n\nfunction decodeToJson(payload) {\n  // covert payload to string.\n  var str = decodeToString(payload);\n\n  // parse string to JSON\n  var data = JSON.parse(str);\n  return data;\n}\n\nfunction base64ToHex(str) {\n    const raw = atob(str);\n    let result = '';\n    for (let i = 0; i < raw.length; i++) {\n    const hex = raw.charCodeAt(i).toString(16);\n    result += (hex.length === 2 ? hex : '0' + hex);\n    }\nreturn result.toUpperCase();\n}\n\nfunction getHex(val) {\n  if (val.startsWith(\"0x\") || val.startsWith(\"0X\")) {\n    val = val.substring(2); //get rid of starting '0x'\n  }\n\n  var numBytes = val.length / 2;\n  var bytes = [];\n\n  for (var i = 0; i < numBytes; i++) {\n    bytes.push(parseInt(val.substring(i * 2, i * 2 + 2), 16));\n  }\n\n  return bytes;\n}\n",
+          "image": null,
+          "repository": "os2iot",
+          "lastUpdate": "2025-07-18T20:48:53.018Z",
+          "metadata": {
+            "originalFolder": "Milesight_WS302-1",
+            "codeUrl": "https://raw.githubusercontent.com/OS2iot/OS2iot-payloaddecoders/main/Milesight_WS302-1/Milesight_WS302-1.js",
+            "readmeUrl": "https://raw.githubusercontent.com/OS2iot/OS2iot-payloaddecoders/main/Milesight_WS302-1/README.md"
+          },
+          "readme": "# IoT-device model\nMilesight WS302\n\n## Transmission type\nLoRaWAN\n\n## Description\nDecode data from the soundlevel sensor. Data model is compatible with NGSI-LD. \n\n## Example output data\n````JSON\n{\n      \"id\": \"soundlevel-sensor:1234-Milesight\",\n      \"type\": \"soundlevel-sensor\",\n      \"name\": {\n          \"type\": \"Property\",\n          \"value\": \"Milesight Sound Sensor\"\n      },\n      \"la\": {\n          \"type\": \"Property\",\n          \"value\": 56.9,\n          \"observedAt\": \"2024-07-02T12:53:44.111111Z\"\n      },\n      \"laeq\": {\n          \"type\": \"Property\",\n          \"value\": 46.4,\n          \"observedAt\": \"2024-07-02T12:53:44.111111Z\"\n      },\n      \"lamax\": {\n          \"type\": \"Property\",\n          \"value\": 70.3,\n          \"observedAt\": \"2024-07-02T12:53:44.111111Z\"\n      },\n      \"battery\": {\n          \"type\": \"Property\",\n          \"value\": 65,\n          \"observedAt\": \"2024-07-02T12:53:44.111111Z\"\n      }\n}\n```` \n\n## Source\nhttps://github.com/Milesight-IoT/SensorDecoders/tree/main/WS_Series/WS302\n\n## Based on\nMilesights own decoder. Adjusted for OS2Iot\n\n## Author\nminiib (Github)\n\n### Contact\nAlexander Ibsen, alei@aarhus.dk\n"
+        },
+        {
+          "id": "sensecap_t1000-a_tracker",
+          "name": "SenseCAP T1000 A Tracker",
+          "description": "Payload decoder for SenseCAP T1000-A Tracker",
+          "manufacturer": "SenseCAP T1000",
+          "model": "A Tracker",
+          "code": "// OS2IOT-specific code\n// Kristian Risager Larsen and Alexander Ibsen, IOT Lab, Aarhus Kommune - 2025-07\n// iotlab@aarhus.dk \nfunction base64ToBytes(str) {\n    return atob(str)\n        .split(\"\")\n        .map(function (c) {\n        return c.charCodeAt(0);\n        });\n}\n\nfunction decode(payload,metadata) {\n    let timestamp = new Date(payload.rxInfo[0].nsTime).toISOString();\n\n    let res = {};\n    payload.bytes = base64ToBytes(payload.data)\n    decoded = decoder(payload)\n\n    let sensorId = payload.deviceInfo.devEui.slice(-6);\n    \n    res.id = \"Field-tester:\" + sensorId + \"-SenseCAP\";\n    res.type=  \"Field-tester\"   \n    res.name =  {\n        \"type\": \"Property\",\n        \"value\": metadata.name\n    } \n\n    // debug\n    //res.decoded = decoded.data\n\n    if (decoded.data.hasOwnProperty(\"battery\"))\n    {\n        res.battery =  {\n            \"type\": \"Property\",\n            \"value\": decoded.data.battery,\n            \"observedAt\": timestamp\n        }\n    }\n\n    // RSSI, SNR and SF\n    if (payload.rxInfo[0].hasOwnProperty(\"rssi\")) {\n        res.rssi =  {\n            \"type\": \"Property\",\n            \"value\": payload.rxInfo[0].rssi,\n            \"observedAt\": timestamp\n        }\n    }    \n    if (payload.rxInfo[0].hasOwnProperty(\"snr\")) {\n        res.snr =  {\n            \"type\": \"Property\",\n            \"value\": payload.rxInfo[0].snr,\n            \"observedAt\": timestamp\n        }\n    }\n    if (payload.txInfo.modulation.lora.hasOwnProperty(\"spreadingFactor\")) {\n        res.spreadingFactor =  {\n            \"type\": \"Property\",\n            \"value\": payload.txInfo.modulation.lora.spreadingFactor,\n            \"observedAt\": timestamp\n        }\n    }\n\n    \n    if (decoded.data.hasOwnProperty(\"latitude\") && decoded.data.hasOwnProperty(\"longitude\") && decoded.data.latitude != null)    {\n        res.location = {\n            \"type\": \"GeoProperty\",\n            \"value\": {\n                \"type\": \"Point\",\n                \"coordinates\":[decoded.data.latitude, decoded.data.longitude],\n                \"observedAt\": timestamp\n            }\n        }\n        return [res];\n    } else {\n      // only return data if there is a latitude and longitude\n      return false;\n      //return [res]; // debug\n     }\n}\n\n\n// Original code by https://github.com/stefanbraun-private : https://gist.githubusercontent.com/stefanbraun-private/941a35b3e94eb682b713f60d9ce246da/raw/04bcd3319451faa9ef87235472f343050f9342e3/Helium%2520Mapping%2520-%2520ChirpStack_v4_SenseCAP_T1000-A_Decoder.js\n\n  // Decode uplink function.\n  //\n  // Input is an object with the following fields:\n  // - bytes = Byte array containing the uplink payload, e.g. [255, 230, 255, 0]\n  // - fPort = Uplink fPort.\n  // - variables = Object containing the configured device variables.\n  //\n  // Output must be an object with the following fields:\n  // - data = Object representing the decoded payload.\nfunction decoder (input) {\n    const bytes = input['bytes']\n    const fport = parseInt(input['fPort'])\n    const bytesString = bytes2HexString(bytes)\n    const originMessage = bytesString.toLocaleUpperCase()\n\t  const decoded = {\n        valid: true,\n        err: 0,\n      \tpayload: bytesString,\n      \tmessages: [],\n\n\t\t// BrS, 17.04.2024: adding location data into structure of decoded payload (for Helium Mapping)\n      \tlatitude: null,\n      \tlongitude: null,\n      \taltitude: 0,\n      \taccuracy: 12,\n\n      \t// BrS, 18.04.2024: adding app_eui for compatibility with Helium Console format\t\n\t\t// BrS, 09.06.2024: this isn't necessary for Helium Mappers and Helium CoverageMap (BUGFIX: fieldname is \"appeui\")\n      \t// https://github.com/disk91/helium-chirpstack-community/wiki/Helium-compatible-Integration#http-integration\n      \t// =>setting a custom variable in device, for using it in current codec (inserting it into uplink):\n\t\t//   \"Applications\" => my application => my device => \"Configuration\" => \"Variables\" => add variable \"app_eui\" with hexstring as value\n \n      \t// Kristian Risager Larsen, 2025-07: OS2IOT: Removed: appeui: input.variables.app_eui\n    }\n\n    if (fport === 199 || fport === 192) {\n        decoded.messages.push({fport: fport, payload: bytesString})\n        return { data: decoded }\n    }\n    if (fport !== 5) {\n        decoded.valid = false\n        return { data: decoded }\n    }\n    let measurement = messageAnalyzed(originMessage)\n    if (measurement.length === 0) {\n        decoded.valid = false\n        return { data: decoded }\n    }\n\n    for (let message of measurement) {\n        if (message.length === 0) {\n            continue\n        }\n        let elements = []\n        for (let element of message) {\n            if (element.errorCode) {\n                decoded.err = element.errorCode\n                decoded.errMessage = element.error\n            } else {\n              elements.push(element)\n\t\t\t\t// BrS, 17.04.2024: adding position to fixed position of decoded payload (for Helium Mapping)\n                if (element.type == 'Longitude'){\n                    decoded.longitude = element.measurementValue\n                }\n                if (element.type == 'Latitude'){\n                    decoded.latitude = element.measurementValue\n                }\n\n                // Kristian Risager Larsen, 2025-07: adding battery status\n                if (element.type == 'Battery'){\n                    decoded.battery = element.measurementValue;\n                }\n\n            }\n        }\n        if (elements.length > 0) {\n            decoded.messages.push(elements)\n        }\n    }\n    // decoded.messages = measurement\n    return { data: decoded }\n}\n\nfunction messageAnalyzed (messageValue) {\n    try {\n        let frames = unpack(messageValue)\n        let measurementResultArray = []\n        for (let i = 0; i < frames.length; i++) {\n            let item = frames[i]\n            let dataId = item.dataId\n            let dataValue = item.dataValue\n            let measurementArray = deserialize(dataId, dataValue)\n            measurementResultArray.push(measurementArray)\n        }\n        return measurementResultArray\n    } catch (e) {\n        return e.toString()\n    }\n}\n\nfunction unpack (messageValue) {\n    let frameArray = []\n\n    for (let i = 0; i < messageValue.length; i++) {\n        let remainMessage = messageValue\n        let dataId = remainMessage.substring(0, 2).toUpperCase()\n        let dataValue\n        let dataObj = {}\n        let packageLen\n        switch (dataId) {\n            case '01':\n                packageLen = 94\n                if (remainMessage.length < packageLen) {\n                    return frameArray\n                }\n                dataValue = remainMessage.substring(2, packageLen)\n                messageValue = remainMessage.substring(packageLen)\n                dataObj = {\n                    'dataId': dataId, 'dataValue': dataValue\n                }\n                break\n            case '02':\n                packageLen = 32\n                if (remainMessage.length < packageLen) {\n                    return frameArray\n                }\n                dataValue = remainMessage.substring(2, packageLen)\n                messageValue = remainMessage.substring(packageLen)\n                dataObj = {\n                    'dataId': dataId, 'dataValue': dataValue\n                }\n                break\n            case '03':\n                packageLen = 64\n                if (remainMessage.length < packageLen) {\n                    return frameArray\n                }\n                dataValue = remainMessage.substring(2, packageLen)\n                messageValue = remainMessage.substring(packageLen)\n                dataObj = {\n                    'dataId': dataId, 'dataValue': dataValue\n                }\n                break\n            case '04':\n                packageLen = 20\n                if (remainMessage.length < packageLen) {\n                    return frameArray\n                }\n                dataValue = remainMessage.substring(2, packageLen)\n                messageValue = remainMessage.substring(packageLen)\n                dataObj = {\n                    'dataId': dataId, 'dataValue': dataValue\n                }\n                break\n            case '05':\n                packageLen = 10\n                if (remainMessage.length < packageLen) {\n                    return frameArray\n                }\n                dataValue = remainMessage.substring(2, packageLen)\n                messageValue = remainMessage.substring(packageLen)\n                dataObj = {\n                    'dataId': dataId, 'dataValue': dataValue\n                }\n                break\n            case '06':\n                packageLen = 44\n                if (remainMessage.length < packageLen) {\n                    return frameArray\n                }\n                dataValue = remainMessage.substring(2, packageLen)\n                messageValue = remainMessage.substring(packageLen)\n                dataObj = {\n                    'dataId': dataId, 'dataValue': dataValue\n                }\n                break\n            case '07':\n                packageLen = 84\n                if (remainMessage.length < packageLen) {\n                    return frameArray\n                }\n                dataValue = remainMessage.substring(2, packageLen)\n                messageValue = remainMessage.substring(packageLen)\n                dataObj = {\n                    'dataId': dataId, 'dataValue': dataValue\n                }\n                break\n            case '08':\n                packageLen = 70\n                if (remainMessage.length < packageLen) {\n                    return frameArray\n                }\n                dataValue = remainMessage.substring(2, packageLen)\n                messageValue = remainMessage.substring(packageLen)\n                dataObj = {\n                    'dataId': dataId, 'dataValue': dataValue\n                }\n                break\n            case '09':\n                packageLen = 36\n                if (remainMessage.length < packageLen) {\n                    return frameArray\n                }\n                dataValue = remainMessage.substring(2, packageLen)\n                messageValue = remainMessage.substring(packageLen)\n                dataObj = {\n                    'dataId': dataId, 'dataValue': dataValue\n                }\n                break\n            case '0A':\n                packageLen = 76\n                if (remainMessage.length < packageLen) {\n                    return frameArray\n                }\n                dataValue = remainMessage.substring(2, packageLen)\n                messageValue = remainMessage.substring(packageLen)\n                dataObj = {\n                    'dataId': dataId, 'dataValue': dataValue\n                }\n                break\n            case '0B':\n                packageLen = 62\n                if (remainMessage.length < packageLen) {\n                    return frameArray\n                }\n                dataValue = remainMessage.substring(2, packageLen)\n                messageValue = remainMessage.substring(packageLen)\n                dataObj = {\n                    'dataId': dataId, 'dataValue': dataValue\n                }\n                break\n            case '0C':\n                packageLen = 2\n                if (remainMessage.length < packageLen) {\n                    return frameArray\n                }\n                break\n            case '0D':\n                packageLen = 10\n                if (remainMessage.length < packageLen) {\n                    return frameArray\n                }\n                dataValue = remainMessage.substring(2, packageLen)\n                messageValue = remainMessage.substring(packageLen)\n                dataObj = {\n                    'dataId': dataId, 'dataValue': dataValue\n                }\n                break\n            case '0E':\n                packageLen = getInt(remainMessage.substring(8, 10)) * 2 + 10\n                if (remainMessage.length < packageLen) {\n                    return frameArray\n                }\n                dataValue = remainMessage.substring(2, 8) + remainMessage.substring(10, packageLen)\n                messageValue = remainMessage.substring(packageLen)\n                dataObj = {\n                    'dataId': dataId, 'dataValue': dataValue\n                }\n                break\n            case '0F':\n                packageLen = 34\n                if (remainMessage.length < packageLen) {\n                    return frameArray\n                }\n                dataValue = remainMessage.substring(2, packageLen)\n                messageValue = remainMessage.substring(packageLen)\n                dataObj = {\n                    'dataId': dataId, 'dataValue': dataValue\n                }\n                break\n            case '10':\n                packageLen = 26\n                if (remainMessage.length < packageLen) {\n                    return frameArray\n                }\n                dataValue = remainMessage.substring(2, packageLen)\n                messageValue = remainMessage.substring(packageLen)\n                dataObj = {\n                    'dataId': dataId, 'dataValue': dataValue\n                }\n                break\n            case '11':\n                packageLen = 28\n                if (remainMessage.length < packageLen) {\n                    return frameArray\n                }\n                dataValue = remainMessage.substring(2, packageLen)\n                messageValue = remainMessage.substring(packageLen)\n                dataObj = {\n                    'dataId': dataId, 'dataValue': dataValue\n                }\n                break\n            default:\n                return frameArray\n        }\n        if (dataValue.length < 2) {\n            break\n        }\n        frameArray.push(dataObj)\n    }\n    return frameArray\n}\n\nfunction deserialize (dataId, dataValue) {\n    let measurementArray = []\n    let eventList = []\n    let measurement = {}\n    let collectTime = 0\n    let groupId = 0\n    let shardFlag = {}\n    let payload = ''\n    let result = []\n    let dataArr = []\n    switch (dataId) {\n        case '01':\n            measurementArray = getUpShortInfo(dataValue)\n            measurementArray.push(...getMotionSetting(dataValue.substring(30, 40)))\n            measurementArray.push(...getStaticSetting(dataValue.substring(40, 46)))\n            measurementArray.push(...getShockSetting(dataValue.substring(46, 52)))\n            measurementArray.push(...getTempSetting(dataValue.substring(52, 72)))\n            measurementArray.push(...getLightSetting(dataValue.substring(72, 92)))\n            break\n        case '02':\n            measurementArray = getUpShortInfo(dataValue)\n            break\n        case '03':\n            measurementArray.push(...getMotionSetting(dataValue.substring(0, 10)))\n            measurementArray.push(...getStaticSetting(dataValue.substring(10, 16)))\n            measurementArray.push(...getShockSetting(dataValue.substring(16, 22)))\n            measurementArray.push(...getTempSetting(dataValue.substring(22, 42)))\n            measurementArray.push(...getLightSetting(dataValue.substring(42, 62)))\n            break\n        case '04':\n            let interval = 0\n            let workMode = getInt(dataValue.substring(0, 2))\n            let heartbeatInterval = getMinsByMin(dataValue.substring(4, 8))\n            let periodicInterval = getMinsByMin(dataValue.substring(8, 12))\n            let eventInterval = getMinsByMin(dataValue.substring(12, 16))\n            switch (workMode) {\n                case 0:\n                    interval = heartbeatInterval\n                    break\n                case 1:\n                    interval = periodicInterval\n                    break\n                case 2:\n                    interval = eventInterval\n                    break\n            }\n            measurementArray = [\n                {measurementId: '3940', type: 'Work Mode', measurementValue: workMode},\n                {measurementId: '3942', type: 'Heartbeat Interval', measurementValue: heartbeatInterval},\n                {measurementId: '3943', type: 'Periodic Interval', measurementValue: periodicInterval},\n                {measurementId: '3944', type: 'Event Interval', measurementValue: eventInterval},\n                {measurementId: '3941', type: 'SOS Mode', measurementValue: getSOSMode(dataValue.substring(16, 18))},\n                {measurementId: '3900', type: 'Uplink Interval', measurementValue: interval}\n            ]\n            break;\n        case '05':\n            measurementArray = [\n                {measurementId: '3000', type: 'Battery', measurementValue: getBattery(dataValue.substring(0, 2))},\n                {measurementId: '3940', type: 'Work Mode', measurementValue: getWorkingMode(dataValue.substring(2, 4))},\n                {measurementId: '3965', type: 'Posistioning Strategy', measurementValue: getPosistioningStrategy(dataValue.substring(4, 6))},\n                {measurementId: '3941', type: 'SOS Mode', measurementValue: getSOSMode(dataValue.substring(6, 8))}\n            ]\n            break\n        case '06':\n            collectTime = getUTCTimestamp(dataValue.substring(8, 16))\n            measurementArray = [\n                {measurementId: '4200', timestamp: collectTime, motionId: getMotionId(dataValue.substring(6, 8)), type: 'Event Status', measurementValue: getEventStatus(dataValue.substring(0, 6))},\n                {measurementId: '4197', timestamp: collectTime, motionId: getMotionId(dataValue.substring(6, 8)), type: 'Longitude', measurementValue: parseFloat(getSensorValue(dataValue.substring(16, 24), 1000000))},\n                {measurementId: '4198', timestamp: collectTime, motionId: getMotionId(dataValue.substring(6, 8)), type: 'Latitude', measurementValue: parseFloat(getSensorValue(dataValue.substring(24, 32), 1000000))},\n                {measurementId: '4097', timestamp: collectTime, motionId: getMotionId(dataValue.substring(6, 8)), type: 'Air Temperature', measurementValue: getSensorValue(dataValue.substring(32, 36), 10)},\n                {measurementId: '4199', timestamp: collectTime, motionId: getMotionId(dataValue.substring(6, 8)), type: 'Light', measurementValue: getSensorValue(dataValue.substring(36, 40))},\n                {measurementId: '3000', timestamp: collectTime, motionId: getMotionId(dataValue.substring(6, 8)), type: 'Battery', measurementValue: getBattery(dataValue.substring(40, 42))}\n            ]\n            break\n        case '07':\n            eventList = getEventStatus(dataValue.substring(0, 6))\n            collectTime = getUTCTimestamp(dataValue.substring(8, 16))\n            measurementArray = [\n                {measurementId: '4200', timestamp: collectTime, motionId: getMotionId(dataValue.substring(6, 8)), type: 'Event Status', measurementValue: getEventStatus(dataValue.substring(0, 6))},\n                {measurementId: '5001', timestamp: collectTime, motionId: getMotionId(dataValue.substring(6, 8)), type: 'Wi-Fi Scan', measurementValue: getMacAndRssiObj(dataValue.substring(16, 72))},\n                {measurementId: '4097', timestamp: collectTime, motionId: getMotionId(dataValue.substring(6, 8)), type: 'Air Temperature', measurementValue: getSensorValue(dataValue.substring(72, 76), 10)},\n                {measurementId: '4199', timestamp: collectTime, motionId: getMotionId(dataValue.substring(6, 8)), type: 'Light', measurementValue: getSensorValue(dataValue.substring(76, 80))},\n                {measurementId: '3000', timestamp: collectTime, motionId: getMotionId(dataValue.substring(6, 8)), type: 'Battery', measurementValue: getBattery(dataValue.substring(80, 82))}\n            ]\n            break\n        case '08':\n            collectTime = getUTCTimestamp(dataValue.substring(8, 16))\n            measurementArray = [\n                {measurementId: '4200', timestamp: collectTime, motionId: getMotionId(dataValue.substring(6, 8)), type: 'Event Status', measurementValue: getEventStatus(dataValue.substring(0, 6))},\n                {measurementId: '5002', timestamp: collectTime, motionId: getMotionId(dataValue.substring(6, 8)), type: 'BLE Scan', measurementValue: getMacAndRssiObj(dataValue.substring(16, 58))},\n                {measurementId: '4097', timestamp: collectTime, motionId: getMotionId(dataValue.substring(6, 8)), type: 'Air Temperature', measurementValue: getSensorValue(dataValue.substring(58, 62), 10)},\n                {measurementId: '4199', timestamp: collectTime, motionId: getMotionId(dataValue.substring(6, 8)), type: 'Light', measurementValue: getSensorValue(dataValue.substring(62, 66))},\n                {measurementId: '3000', timestamp: collectTime, motionId: getMotionId(dataValue.substring(6, 8)), type: 'Battery', measurementValue: getBattery(dataValue.substring(66, 68))}\n            ]\n            break\n        case '09':\n            collectTime = getUTCTimestamp(dataValue.substring(8, 16))\n            measurementArray = [\n                {measurementId: '4200', timestamp: collectTime, motionId: getMotionId(dataValue.substring(6, 8)), type: 'Event Status', measurementValue: getEventStatus(dataValue.substring(0, 6))},\n                {measurementId: '4197', timestamp: collectTime, motionId: getMotionId(dataValue.substring(6, 8)), type: 'Longitude', measurementValue: parseFloat(getSensorValue(dataValue.substring(16, 24), 1000000))},\n                {measurementId: '4198', timestamp: collectTime, motionId: getMotionId(dataValue.substring(6, 8)), type: 'Latitude', measurementValue: parseFloat(getSensorValue(dataValue.substring(24, 32), 1000000))},\n                {measurementId: '3000', timestamp: collectTime, motionId: getMotionId(dataValue.substring(6, 8)), type: 'Battery', measurementValue: getBattery(dataValue.substring(32, 34))}\n            ]\n        \tbreak\n        case '0A':\n            collectTime = getUTCTimestamp(dataValue.substring(8, 16))\n            measurementArray = [\n                {measurementId: '4200', timestamp: collectTime, motionId: getMotionId(dataValue.substring(6, 8)), type: 'Event Status', measurementValue: getEventStatus(dataValue.substring(0, 6))},\n                {measurementId: '5001', timestamp: collectTime, motionId: getMotionId(dataValue.substring(6, 8)), type: 'Wi-Fi Scan', measurementValue: getMacAndRssiObj(dataValue.substring(16, 72))},\n                {measurementId: '3000', timestamp: collectTime, motionId: getMotionId(dataValue.substring(6, 8)), type: 'Battery', measurementValue: getBattery(dataValue.substring(72, 74))}\n            ]\n            break\n        case '0B':\n            collectTime = getUTCTimestamp(dataValue.substring(8, 16))\n            measurementArray = [\n                {measurementId: '4200', timestamp: collectTime, motionId: getMotionId(dataValue.substring(6, 8)), type: 'Event Status', measurementValue: getEventStatus(dataValue.substring(0, 6))},\n                {measurementId: '5002', timestamp: collectTime, motionId: getMotionId(dataValue.substring(6, 8)), type: 'BLE Scan', measurementValue: getMacAndRssiObj(dataValue.substring(16, 58))},\n                {measurementId: '3000', timestamp: collectTime, motionId: getMotionId(dataValue.substring(6, 8)), type: 'Battery', measurementValue: getBattery(dataValue.substring(58, 60))},\n            ]\n            break\n        case '0D':\n            let errorCode = getInt(dataValue)\n            let error = ''\n            switch (errorCode) {\n                case 1:\n                    error = 'FAILED TO OBTAIN THE UTC TIMESTAMP'\n                    break\n                case 2:\n                    error = 'ALMANAC TOO OLD'\n                    break\n                case 3:\n                    error = 'DOPPLER ERROR'\n                    break\n            }\n            measurementArray.push({errorCode, error})\n            break\n        case '0E':\n            shardFlag = getShardFlag(dataValue.substring(0, 2))\n            groupId = getInt(dataValue.substring(2, 6))\n            payload = dataValue.substring(6)\n            measurement = {\n                measurementId: '6152',\n                groupId: groupId,\n                index: shardFlag.index,\n                count: shardFlag.count,\n                type: 'gnss-ng payload',\n                measurementValue: payload\n            }\n            measurementArray.push(measurement)\n            break\n        case '0F':\n            collectTime = getUTCTimestamp(dataValue.substring(8, 16))\n            shardFlag = getShardFlag(dataValue.substring(26, 28))\n            groupId = getInt(dataValue.substring(28, 32))\n            measurementArray.push({\n                measurementId: '4200',\n                timestamp: collectTime,\n                motionId: getMotionId(dataValue.substring(6, 8)),\n                groupId: groupId,\n                index: shardFlag.index,\n                count: shardFlag.count,\n                type: 'Event Status',\n                measurementValue: getEventStatus(dataValue.substring(0, 6))\n            })\n            measurementArray.push({\n                measurementId: '4097',\n                timestamp: collectTime,\n                motionId: getMotionId(dataValue.substring(6, 8)),\n                groupId: groupId,\n                index: shardFlag.index,\n                count: shardFlag.count,\n                type: 'Air Temperature',\n                measurementValue: '' + getSensorValue(dataValue.substring(16, 20), 10)\n            })\n            measurementArray.push({\n                measurementId: '4199',\n                timestamp: collectTime,\n                motionId: getMotionId(dataValue.substring(6, 8)),\n                groupId: groupId,\n                index: shardFlag.index,\n                count: shardFlag.count,\n                type: 'Light',\n                measurementValue: '' + getSensorValue(dataValue.substring(20, 24))\n            })\n            measurementArray.push({\n                measurementId: '3000',\n                timestamp: collectTime,\n                motionId: getMotionId(dataValue.substring(6, 8)),\n                groupId: groupId,\n                index: shardFlag.index,\n                count: shardFlag.count,\n                type: 'Battery',\n                measurementValue: '' + getBattery(dataValue.substring(24, 26))\n            })\n            break\n        case '10':\n            collectTime = getUTCTimestamp(dataValue.substring(8, 16))\n            shardFlag = getShardFlag(dataValue.substring(18, 20))\n            groupId = getInt(dataValue.substring(20, 24))\n            measurementArray.push({\n                measurementId: '4200',\n                timestamp: collectTime,\n                motionId: getMotionId(dataValue.substring(6, 8)),\n                groupId: groupId,\n                index: shardFlag.index,\n                count: shardFlag.count,\n                type: 'Event Status',\n                measurementValue: getEventStatus(dataValue.substring(0, 6))\n            })\n            measurementArray.push({\n                measurementId: '3000',\n                timestamp: collectTime,\n                motionId: getMotionId(dataValue.substring(6, 8)),\n                groupId: groupId,\n                index: shardFlag.index,\n                count: shardFlag.count,\n                type: 'Battery',\n                measurementValue: '' + getBattery(dataValue.substring(16, 18))\n            })\n            break\n        case '11':\n            collectTime = getUTCTimestamp(dataValue.substring(8, 16))\n            measurementArray.push({\n                measurementId: '3576',\n                timestamp: collectTime,\n                type: 'Positioning Status',\n                measurementValue: '' + getPositioningStatus(dataValue.substring(0, 2))\n            })\n            measurementArray.push({\n                timestamp: collectTime,\n                measurementId: '4200',\n                type: 'Event Status',\n                measurementValue: getEventStatus(dataValue.substring(2, 8))\n            })\n            if (!isNaN(parseFloat(getSensorValue(dataValue.substring(16, 20), 10)))) {\n                measurementArray.push({\n                    timestamp: collectTime,\n                    measurementId: '4097',\n                    type: 'Air Temperature',\n                    measurementValue: '' + getSensorValue(dataValue.substring(16, 20), 10)\n                })\n            }\n            if (!isNaN(parseFloat(getSensorValue(dataValue.substring(20, 24))))) {\n                measurementArray.push({\n                    timestamp: collectTime,\n                    measurementId: '4199',\n                    type: 'Light',\n                    measurementValue: '' + getSensorValue(dataValue.substring(20, 24))\n                })\n            }\n            measurementArray.push({\n                timestamp: collectTime,\n                measurementId: '3000',\n                type: 'Battery',\n                measurementValue: '' + getBattery(dataValue.substring(24, 26))\n            })\n            break\n    }\n    return measurementArray\n}\n\nfunction getMotionId (str) {\n    return getInt(str)\n}\n\nfunction getPositioningStatus (str) {\n    return getInt(str)\n}\n\nfunction getUpShortInfo (messageValue) {\n    return [\n        {\n            measurementId: '3000', type: 'Battery', measurementValue: getBattery(messageValue.substring(0, 2))\n        }, {\n            measurementId: '3502', type: 'Firmware Version', measurementValue: getSoftVersion(messageValue.substring(2, 6))\n        }, {\n            measurementId: '3001', type: 'Hardware Version', measurementValue: getHardVersion(messageValue.substring(6, 10))\n        }, {\n            measurementId: '3940', type: 'Work Mode', measurementValue: getWorkingMode(messageValue.substring(10, 12))\n        }, {\n            measurementId: '3965', type: 'Positioning Strategy', measurementValue: getPositioningStrategy(messageValue.substring(12, 14))\n        }, {\n            measurementId: '3942', type: 'Heartbeat Interval', measurementValue: getMinsByMin(messageValue.substring(14, 18))\n        }, {\n            measurementId: '3943', type: 'Periodic Interval', measurementValue: getMinsByMin(messageValue.substring(18, 22))\n        }, {\n            measurementId: '3944', type: 'Event Interval', measurementValue: getMinsByMin(messageValue.substring(22, 26))\n        }, {\n            measurementId: '3945', type: 'Sensor Enable', measurementValue: getInt(messageValue.substring(26, 28))\n        }, {\n            measurementId: '3941', type: 'SOS Mode', measurementValue: getSOSMode(messageValue.substring(28, 30))\n        }\n    ]\n}\n\nfunction getMotionSetting (str) {\n    return [\n        {measurementId: '3946', type: 'Motion Enable', measurementValue: getInt(str.substring(0, 2))},\n        {measurementId: '3947', type: 'Any Motion Threshold', measurementValue: getSensorValue(str.substring(2, 6), 1)},\n        {measurementId: '3948', type: 'Motion Start Interval', measurementValue: getMinsByMin(str.substring(6, 10))},\n    ]\n}\n\nfunction getStaticSetting (str) {\n    return [\n        {measurementId: '3949', type: 'Static Enable', measurementValue: getInt(str.substring(0, 2))},\n        {measurementId: '3950', type: 'Device Static Timeout', measurementValue: getMinsByMin(str.substring(2, 6))}\n    ]\n}\n\nfunction getShockSetting (str) {\n    return [\n        {measurementId: '3951', type: 'Shock Enable', measurementValue: getInt(str.substring(0, 2))},\n        {measurementId: '3952', type: 'Shock Threshold', measurementValue: getInt(str.substring(2, 6))}\n    ]\n}\n\nfunction getTempSetting (str) {\n    return [\n        {measurementId: '3953', type: 'Temp Enable', measurementValue: getInt(str.substring(0, 2))},\n        {measurementId: '3954', type: 'Event Temp Interval', measurementValue: getMinsByMin(str.substring(2, 6))},\n        {measurementId: '3955', type: 'Event Temp Sample Interval', measurementValue: getSecondsByInt(str.substring(6, 10))},\n        {measurementId: '3956', type: 'Temp ThMax', measurementValue: getSensorValue(str.substring(10, 14), 10)},\n        {measurementId: '3957', type: 'Temp ThMin', measurementValue: getSensorValue(str.substring(14, 18), 10)},\n        {measurementId: '3958', type: 'Temp Warning Type', measurementValue: getInt(str.substring(18, 20))}\n    ]\n}\n\nfunction getLightSetting (str) {\n    return [\n        {measurementId: '3959', type: 'Light Enable', measurementValue: getInt(str.substring(0, 2))},\n        {measurementId: '3960', type: 'Event Light Interval', measurementValue: getMinsByMin(str.substring(2, 6))},\n        {measurementId: '3961', type: 'Event Light Sample Interval', measurementValue: getSecondsByInt(str.substring(6, 10))},\n        {measurementId: '3962', type: 'Light ThMax', measurementValue: getSensorValue(str.substring(10, 14), 10)},\n        {measurementId: '3963', type: 'Light ThMin', measurementValue: getSensorValue(str.substring(14, 18), 10)},\n        {measurementId: '3964', type: 'Light Warning Type', measurementValue: getInt(str.substring(18, 20))}\n    ]\n}\n\nfunction getShardFlag (str) {\n    let bitStr = getByteArray(str)\n    return {\n        count: parseInt(bitStr.substring(0, 4), 2),\n        index: parseInt(bitStr.substring(4), 2)\n    }\n}\n\nfunction getBattery (batteryStr) {\n    return loraWANV2DataFormat(batteryStr)\n}\nfunction getSoftVersion (softVersion) {\n    return `${loraWANV2DataFormat(softVersion.substring(0, 2))}.${loraWANV2DataFormat(softVersion.substring(2, 4))}`\n}\nfunction getHardVersion (hardVersion) {\n    return `${loraWANV2DataFormat(hardVersion.substring(0, 2))}.${loraWANV2DataFormat(hardVersion.substring(2, 4))}`\n}\n\nfunction getSecondsByInt (str) {\n    return getInt(str)\n}\n\nfunction getMinsByMin (str) {\n    return getInt(str)\n}\n\nfunction getSensorValue (str, dig) {\n    if (str === '8000') {\n        return null\n    } else {\n        return loraWANV2DataFormat(str, dig)\n    }\n}\n\nfunction bytes2HexString (arrBytes) {\n    var str = ''\n    for (var i = 0; i < arrBytes.length; i++) {\n        var tmp\n        var num = arrBytes[i]\n        if (num < 0) {\n            tmp = (255 + num + 1).toString(16)\n        } else {\n            tmp = num.toString(16)\n        }\n        if (tmp.length === 1) {\n            tmp = '0' + tmp\n        }\n        str += tmp\n    }\n    return str\n}\nfunction loraWANV2DataFormat (str, divisor = 1) {\n    let strReverse = bigEndianTransform(str)\n    let str2 = toBinary(strReverse)\n    if (str2.substring(0, 1) === '1') {\n        let arr = str2.split('')\n        let reverseArr = arr.map((item) => {\n            if (parseInt(item) === 1) {\n                return 0\n            } else {\n                return 1\n            }\n        })\n        str2 = parseInt(reverseArr.join(''), 2) + 1\n        return '-' + str2 / divisor\n    }\n    return parseInt(str2, 2) / divisor\n}\n\nfunction bigEndianTransform (data) {\n    let dataArray = []\n    for (let i = 0; i < data.length; i += 2) {\n        dataArray.push(data.substring(i, i + 2))\n    }\n    return dataArray\n}\n\nfunction toBinary (arr) {\n    let binaryData = arr.map((item) => {\n        let data = parseInt(item, 16)\n            .toString(2)\n        let dataLength = data.length\n        if (data.length !== 8) {\n            for (let i = 0; i < 8 - dataLength; i++) {\n                data = `0` + data\n            }\n        }\n        return data\n    })\n    return binaryData.toString().replace(/,/g, '')\n}\n\nfunction getSOSMode (str) {\n    return loraWANV2DataFormat(str)\n}\n\nfunction getMacAndRssiObj (pair) {\n    let pairs = []\n    if (pair.length % 14 === 0) {\n        for (let i = 0; i < pair.length; i += 14) {\n            let mac = getMacAddress(pair.substring(i, i + 12))\n            if (mac) {\n                let rssi = getInt8RSSI(pair.substring(i + 12, i + 14))\n                pairs.push({mac: mac, rssi: rssi})\n            } else {\n                continue\n            }\n        }\n    }\n    return pairs\n}\n\nfunction getMacAddress (str) {\n    if (str.toLowerCase() === 'ffffffffffff') {\n        return null\n    }\n    let macArr = []\n    for (let i = 1; i < str.length; i++) {\n        if (i % 2 === 1) {\n            macArr.push(str.substring(i - 1, i + 1))\n        }\n    }\n    let mac = ''\n    for (let i = 0; i < macArr.length; i++) {\n        mac = mac + macArr[i]\n        if (i < macArr.length - 1) {\n            mac = mac + ':'\n        }\n    }\n    return mac\n}\n\nfunction getInt8RSSI (str) {\n    return loraWANV2DataFormat(str)\n}\n\nfunction getInt (str) {\n    return parseInt(str, 16)\n}\n\nfunction getEventStatus (str) {\n    // return getInt(str)\n    let bitStr = getByteArray(str)\n    let bitArr = []\n    for (let i = 0; i < bitStr.length; i++) {\n        bitArr[i] = bitStr.substring(i, i + 1)\n    }\n    bitArr = bitArr.reverse()\n    let event = []\n    for (let i = 0; i < bitArr.length; i++) {\n        if (bitArr[i] !== '1') {\n            continue\n        }\n        switch (i){\n            case 0:\n                event.push({id:1, eventName:\"Start moving event.\"})\n                break\n            case 1:\n                event.push({id:2, eventName:\"End movement event.\"})\n                break\n            case 2:\n                event.push({id:3, eventName:\"Motionless event.\"})\n                break\n            case 3:\n                event.push({id:4, eventName:\"Shock event.\"})\n                break\n            case 4:\n                event.push({id:5, eventName:\"Temperature event.\"})\n                break\n            case 5:\n                event.push({id:6, eventName:\"Light event.\"})\n                break\n            case 6:\n                event.push({id:7, eventName:\"SOS event.\"})\n                break\n            case 7:\n                event.push({id:8, eventName:\"Press once event.\"})\n                break\n        }\n    }\n    return event\n}\n\nfunction getByteArray (str) {\n    let bytes = []\n    for (let i = 0; i < str.length; i += 2) {\n        bytes.push(str.substring(i, i + 2))\n    }\n    return toBinary(bytes)\n}\n\nfunction getWorkingMode (workingMode) {\n    return getInt(workingMode)\n}\n\nfunction getPositioningStrategy (strategy) {\n    return getInt(strategy)\n}\n\nfunction getUTCTimestamp(str){\n    return parseInt(loraWANV2PositiveDataFormat(str)) * 1000\n}\n\nfunction loraWANV2PositiveDataFormat (str, divisor = 1) {\n    let strReverse = bigEndianTransform(str)\n    let str2 = toBinary(strReverse)\n    return parseInt(str2, 2) / divisor\n}\n  \n  // Encode downlink function.\n  //\n  // Input is an object with the following fields:\n  // - data = Object representing the payload that must be encoded.\n  // - variables = Object containing the configured device variables.\n  //\n  // Output must be an object with the following fields:\n  // - bytes = Byte array containing the downlink payload.\n  function encodeDownlink(input) {\n    return {\n      bytes: [225, 230, 255, 0]\n    };\n  }\n  \n\n\n\n",
+          "image": null,
+          "repository": "os2iot",
+          "lastUpdate": "2025-07-18T20:48:53.538Z",
+          "metadata": {
+            "originalFolder": "SenseCAP T1000-A Tracker",
+            "codeUrl": "https://raw.githubusercontent.com/OS2iot/OS2iot-payloaddecoders/main/SenseCAP%20T1000-A%20Tracker/SenseCAPT1000-A_Tracker.js",
+            "readmeUrl": "https://raw.githubusercontent.com/OS2iot/OS2iot-payloaddecoders/main/SenseCAP%20T1000-A%20Tracker/README.md"
+          },
+          "readme": "# IoT-device model\nSenseCAP T1000-A Tracker\n\n## Transmission type\nLoRaWAN\n\n## Description\nPositioning data from tracker as well as LoRa link quality indicators.\n\n## Source\nOriginal code by https://github.com/stefanbraun-private : https://gist.githubusercontent.com/stefanbraun-private/941a35b3e94eb682b713f60d9ce246da/raw/04bcd3319451faa9ef87235472f343050f9342e3/Helium%2520Mapping%2520-%2520ChirpStack_v4_SenseCAP_T1000-A_Decoder.js\n\n## Based on\nOriginal code by https://github.com/stefanbraun-private : https://gist.githubusercontent.com/stefanbraun-private/941a35b3e94eb682b713f60d9ce246da/raw/04bcd3319451faa9ef87235472f343050f9342e3/Helium%2520Mapping%2520-%2520ChirpStack_v4_SenseCAP_T1000-A_Decoder.js\n\n## Author\n* Kristian Risager Larsen, IoT Lab, Aarhus Kommune\n* Alexander Ibsen, IoT Lab, Aarhus Kommune\n\n### Contact\niotlab@aarhus.dk \n"
+        },
+        {
+          "id": "talkpool_oy1110-1",
+          "name": "Talkpool OY1110 1",
+          "description": "Payload decoder for Talkpool OY1110-1",
+          "manufacturer": "Talkpool",
+          "model": "1",
+          "code": "function base64ToBytes(str) {\r\n    return atob(str)\r\n          .split(\"\")\r\n          .map(function (c) {\r\n            return c.charCodeAt(0);\r\n          });\r\n}\r\n\r\nfunction decode(payload, metadata) {\r\n    if (payload.fPort == 2) {\r\n        buf = base64ToBytes(payload.data)\r\n        let res = {\r\n            raw : payload.data,\r\n            temp: (((buf[0] << 4) | (buf[2] >>    4)) - 800)/10,\r\n            hum:  (((buf[1] << 4) | (buf[2] &   0xf)) - 250)/10,\r\n            name:metadata.name,\r\n            location: metadata.location,\r\n            commentOnLocation: metadata.commentOnLocation\r\n        };\r\n    \r\n        return res;\r\n    }\r\n}\r\n    ",
+          "image": null,
+          "repository": "os2iot",
+          "lastUpdate": "2025-07-18T20:48:54.100Z",
+          "metadata": {
+            "originalFolder": "Talkpool OY1110-1",
+            "codeUrl": "https://raw.githubusercontent.com/OS2iot/OS2iot-payloaddecoders/main/Talkpool%20OY1110-1/Talkpool%20OY1110-1.js",
+            "readmeUrl": "https://raw.githubusercontent.com/OS2iot/OS2iot-payloaddecoders/main/Talkpool%20OY1110-1/README.md"
+          },
+          "readme": "# IoT-device model\r\nTalkpool OY1110\r\n\r\n## Transmission type\r\nLoRaWAN\r\n\r\n## Description\r\nTil celcius og luftfugtighed i procent. Lokation - hvis device er udpeget i OS2Iot-kortinterface medtages i payload-dekoder, herunder at geo-attributterne x og y (WGS 84) medtages i output.\r\n\r\n## Source\r\nhttps://talkpool.com/\r\n\r\n## Based on\r\nNone.\r\n\r\n## Author\r\n* Danny Morck, Ballerup Kommune / Morten Guldgager MindFuture\r\n* GitHub user: Damorck\r\n\r\n### Contact\r\nGitHub user: Damorck \r\n"
+        }
+      ],
+      "lastUpdate": "2025-07-18T20:48:54.473Z",
+      "count": 12
+    },
+    "ttn-official": {
+      "decoders": [
+        {
+          "id": "ttn-abeeway-abeeway-compact-tracker-pro-as923",
+          "name": "abeeway abeeway-compact-tracker-pro-as923",
+          "description": "TTN Official Device: abeeway abeeway-compact-tracker-pro-as923",
+          "manufacturer": "abeeway",
+          "model": "abeeway-compact-tracker-pro-as923",
+          "repository": "ttn-official",
+          "type": "device",
+          "version": "1.0",
+          "code": "function decodeUplink(input) { return { data: input, warnings: [], errors: [] }; }",
+          "image": "https://raw.githubusercontent.com/TheThingsNetwork/lorawan-devices/master/vendor/abeeway/abeeway-compact-tracker-pro-as923.png",
+          "lastUpdate": "2025-07-01T19:27:22.914Z",
+          "metadata": {
+            "hardwareVersions": [],
+            "firmwareVersions": [],
+            "profiles": {},
+            "regions": [],
+            "codecId": null
+          }
+        },
+        {
+          "id": "ttn-abeeway-abeeway-compact-tracker-pro-eu868",
+          "name": "abeeway abeeway-compact-tracker-pro-eu868",
+          "description": "TTN Official Device: abeeway abeeway-compact-tracker-pro-eu868",
+          "manufacturer": "abeeway",
+          "model": "abeeway-compact-tracker-pro-eu868",
+          "repository": "ttn-official",
+          "type": "device",
+          "version": "1.0",
+          "code": "function decodeUplink(input) { return { data: input, warnings: [], errors: [] }; }",
+          "image": "https://raw.githubusercontent.com/TheThingsNetwork/lorawan-devices/master/vendor/abeeway/abeeway-compact-tracker-pro-eu868.png",
+          "lastUpdate": "2025-07-01T19:27:22.930Z",
+          "metadata": {
+            "hardwareVersions": [],
+            "firmwareVersions": [],
+            "profiles": {},
+            "regions": [],
+            "codecId": null
+          }
+        },
+        {
+          "id": "ttn-abeeway-abeeway-compact-tracker-pro-us915",
+          "name": "abeeway abeeway-compact-tracker-pro-us915",
+          "description": "TTN Official Device: abeeway abeeway-compact-tracker-pro-us915",
+          "manufacturer": "abeeway",
+          "model": "abeeway-compact-tracker-pro-us915",
+          "repository": "ttn-official",
+          "type": "device",
+          "version": "1.0",
+          "code": "function decodeUplink(input) { return { data: input, warnings: [], errors: [] }; }",
+          "image": "https://raw.githubusercontent.com/TheThingsNetwork/lorawan-devices/master/vendor/abeeway/abeeway-compact-tracker-pro-us915.png",
+          "lastUpdate": "2025-07-01T19:27:22.940Z",
+          "metadata": {
+            "hardwareVersions": [],
+            "firmwareVersions": [],
+            "profiles": {},
+            "regions": [],
+            "codecId": null
+          }
+        },
+        {
+          "id": "ttn-abeeway-abeeway-compact-tracker",
+          "name": "Compact Tracker",
+          "description": "The Abeeway Compact Tracker is a highly versatile multi-mode tracker for outdoor and indoor geolocation with embedded sensors combining GPS, Low-power GPS, Wi-Fi Sniffer, BLE, and LoRa TDoA geolocation technologies.",
+          "manufacturer": "abeeway",
+          "model": "abeeway-compact-tracker",
+          "repository": "ttn-official",
+          "type": "device",
+          "version": "1.0",
+          "code": "// TTN Codec: asset-tracker-2-codec\nfunction decodeUplink(input) {\n  // Auto-generated from TTN Device Repository\n  return {\n    data: {\n      raw: input.bytes,\n      fPort: input.fPort,\n      deviceModel: 'abeeway-compact-tracker',\n      manufacturer: 'abeeway'\n    },\n    warnings: [],\n    errors: []\n  };\n}",
+          "image": "https://raw.githubusercontent.com/TheThingsNetwork/lorawan-devices/master/vendor/abeeway/abeeway-compact-tracker.png",
+          "lastUpdate": "2025-07-01T19:27:22.952Z",
+          "metadata": {
+            "hardwareVersions": [],
+            "firmwareVersions": [],
+            "profiles": {},
+            "regions": [
+              "EU863-870",
+              "US902-928",
+              "EU863-870",
+              "US902-928"
+            ],
+            "codecId": "asset-tracker-2-codec"
+          }
+        },
+        {
+          "id": "ttn-abeeway-abeeway-geolocation-module-pro-as923",
+          "name": "abeeway abeeway-geolocation-module-pro-as923",
+          "description": "TTN Official Device: abeeway abeeway-geolocation-module-pro-as923",
+          "manufacturer": "abeeway",
+          "model": "abeeway-geolocation-module-pro-as923",
+          "repository": "ttn-official",
+          "type": "device",
+          "version": "1.0",
+          "code": "function decodeUplink(input) { return { data: input, warnings: [], errors: [] }; }",
+          "image": "https://raw.githubusercontent.com/TheThingsNetwork/lorawan-devices/master/vendor/abeeway/abeeway-geolocation-module-pro-as923.png",
+          "lastUpdate": "2025-07-01T19:27:22.968Z",
+          "metadata": {
+            "hardwareVersions": [],
+            "firmwareVersions": [],
+            "profiles": {},
+            "regions": [],
+            "codecId": null
+          }
+        },
+        {
+          "id": "ttn-accuwatch-3chbatteryvoltagesensor-codec",
+          "name": "accuwatch 3chbatteryvoltagesensor-codec",
+          "description": "TTN Official Device: accuwatch 3chbatteryvoltagesensor-codec",
+          "manufacturer": "accuwatch",
+          "model": "3chbatteryvoltagesensor-codec",
+          "repository": "ttn-official",
+          "type": "device",
+          "version": "1.0",
+          "code": "function decodeUplink(input) { return { data: input, warnings: [], errors: [] }; }",
+          "image": "https://raw.githubusercontent.com/TheThingsNetwork/lorawan-devices/master/vendor/accuwatch/3chbatteryvoltagesensor-codec.png",
+          "lastUpdate": "2025-07-01T19:27:23.148Z",
+          "metadata": {
+            "hardwareVersions": [],
+            "firmwareVersions": [],
+            "profiles": {},
+            "regions": [],
+            "codecId": null
+          }
+        },
+        {
+          "id": "ttn-accuwatch-3chbatteryvoltagesensor-profile",
+          "name": "accuwatch 3chbatteryvoltagesensor-profile",
+          "description": "TTN Official Device: accuwatch 3chbatteryvoltagesensor-profile",
+          "manufacturer": "accuwatch",
+          "model": "3chbatteryvoltagesensor-profile",
+          "repository": "ttn-official",
+          "type": "device",
+          "version": "1.0",
+          "code": "function decodeUplink(input) { return { data: input, warnings: [], errors: [] }; }",
+          "image": "https://raw.githubusercontent.com/TheThingsNetwork/lorawan-devices/master/vendor/accuwatch/3chbatteryvoltagesensor-profile.png",
+          "lastUpdate": "2025-07-01T19:27:23.359Z",
+          "metadata": {
+            "hardwareVersions": [],
+            "firmwareVersions": [],
+            "profiles": {},
+            "regions": [],
+            "codecId": null
+          }
+        },
+        {
+          "id": "ttn-accuwatch-3chbatteryvoltagesensor",
+          "name": "LoraWan 3ch Voltage Sensor # Device name can not contain the vendor name",
+          "description": "This custom-designed 3-Channel Battery Voltage Sensor is engineered to monitor the voltage of up to three separate batteries with a shared ground connection, making it ideal for applications where multiple batteries need simultaneous tracking. Constructed with an IP67-rated waterproof enclosure, it is built to withstand harsh environments, including marine and outdoor applications, where water and dust resistance are crucial.",
+          "manufacturer": "accuwatch",
+          "model": "3chbatteryvoltagesensor",
+          "repository": "ttn-official",
+          "type": "device",
+          "version": "1.0",
+          "code": "// TTN Codec: 3chbatteryvoltagesensor-codec\nfunction decodeUplink(input) {\n  // Auto-generated from TTN Device Repository\n  return {\n    data: {\n      raw: input.bytes,\n      fPort: input.fPort,\n      deviceModel: '3chbatteryvoltagesensor',\n      manufacturer: 'accuwatch'\n    },\n    warnings: [],\n    errors: []\n  };\n}",
+          "image": "https://raw.githubusercontent.com/TheThingsNetwork/lorawan-devices/master/vendor/accuwatch/3chbatteryvoltagesensor.png",
+          "lastUpdate": "2025-07-01T19:27:23.381Z",
+          "metadata": {
+            "hardwareVersions": [],
+            "firmwareVersions": [],
+            "profiles": {},
+            "regions": [
+              "EU863-870"
+            ],
+            "codecId": "3chbatteryvoltagesensor-codec"
+          }
+        },
+        {
+          "id": "ttn-acrios-acr-cv-101l-m-d-profile",
+          "name": "acrios acr-cv-101l-m-d-profile",
+          "description": "TTN Official Device: acrios acr-cv-101l-m-d-profile",
+          "manufacturer": "acrios",
+          "model": "acr-cv-101l-m-d-profile",
+          "repository": "ttn-official",
+          "type": "device",
+          "version": "1.0",
+          "code": "function decodeUplink(input) { return { data: input, warnings: [], errors: [] }; }",
+          "image": "https://raw.githubusercontent.com/TheThingsNetwork/lorawan-devices/master/vendor/acrios/acr-cv-101l-m-d-profile.png",
+          "lastUpdate": "2025-07-01T19:27:23.546Z",
+          "metadata": {
+            "hardwareVersions": [],
+            "firmwareVersions": [],
+            "profiles": {},
+            "regions": [],
+            "codecId": null
+          }
+        },
+        {
+          "id": "ttn-acrios-acr-cv-101l-m-d",
+          "name": "M-Bus to LoRaWAN converter",
+          "description": "M-Bus to LoRaWAN converter is used to retrofit ANY M-Bus meter with LoRaWAN communication",
+          "manufacturer": "acrios",
+          "model": "acr-cv-101l-m-d",
+          "repository": "ttn-official",
+          "type": "device",
+          "version": "1.0",
+          "code": "// TTN Codec: acr-cv-101l-m-x-codec\nfunction decodeUplink(input) {\n  // Auto-generated from TTN Device Repository\n  return {\n    data: {\n      raw: input.bytes,\n      fPort: input.fPort,\n      deviceModel: 'acr-cv-101l-m-d',\n      manufacturer: 'acrios'\n    },\n    warnings: [],\n    errors: []\n  };\n}",
+          "image": "https://raw.githubusercontent.com/TheThingsNetwork/lorawan-devices/master/vendor/acrios/acr-cv-101l-m-d.png",
+          "lastUpdate": "2025-07-01T19:27:23.568Z",
+          "metadata": {
+            "hardwareVersions": [],
+            "firmwareVersions": [],
+            "profiles": {},
+            "regions": [
+              "EU863-870",
+              "EU863-870"
+            ],
+            "codecId": "acr-cv-101l-m-x-codec"
+          }
+        },
+        {
+          "id": "ttn-acrios-acr-cv-101l-m-eac",
+          "name": "M-Bus to LoRaWAN converter, externally powered",
+          "description": "M-Bus to LoRaWAN converter is used to retrofit ANY M-Bus meter with LoRaWAN communication",
+          "manufacturer": "acrios",
+          "model": "acr-cv-101l-m-eac",
+          "repository": "ttn-official",
+          "type": "device",
+          "version": "1.0",
+          "code": "// TTN Codec: acr-cv-101l-m-x-codec\nfunction decodeUplink(input) {\n  // Auto-generated from TTN Device Repository\n  return {\n    data: {\n      raw: input.bytes,\n      fPort: input.fPort,\n      deviceModel: 'acr-cv-101l-m-eac',\n      manufacturer: 'acrios'\n    },\n    warnings: [],\n    errors: []\n  };\n}",
+          "image": "https://raw.githubusercontent.com/TheThingsNetwork/lorawan-devices/master/vendor/acrios/acr-cv-101l-m-eac.png",
+          "lastUpdate": "2025-07-01T19:27:23.584Z",
+          "metadata": {
+            "hardwareVersions": [],
+            "firmwareVersions": [],
+            "profiles": {},
+            "regions": [
+              "EU863-870",
+              "EU863-870"
+            ],
+            "codecId": "acr-cv-101l-m-x-codec"
+          }
+        },
+        {
+          "id": "ttn-acrios-acr-cv-101l-m-x-codec",
+          "name": "acrios acr-cv-101l-m-x-codec",
+          "description": "TTN Official Device: acrios acr-cv-101l-m-x-codec",
+          "manufacturer": "acrios",
+          "model": "acr-cv-101l-m-x-codec",
+          "repository": "ttn-official",
+          "type": "device",
+          "version": "1.0",
+          "code": "function decodeUplink(input) { return { data: input, warnings: [], errors: [] }; }",
+          "image": "https://raw.githubusercontent.com/TheThingsNetwork/lorawan-devices/master/vendor/acrios/acr-cv-101l-m-x-codec.png",
+          "lastUpdate": "2025-07-01T19:27:23.605Z",
+          "metadata": {
+            "hardwareVersions": [],
+            "firmwareVersions": [],
+            "profiles": {},
+            "regions": [],
+            "codecId": null
+          }
+        },
+        {
+          "id": "ttn-acrios-acr-cv-101l-r-eac",
+          "name": "RS-485 to LoRaWAN converter, externally powered",
+          "description": "RS-485 to LoRaWAN converter is used to retrofit ANY RS-485 meter with LoRaWAN communication",
+          "manufacturer": "acrios",
+          "model": "acr-cv-101l-r-eac",
+          "repository": "ttn-official",
+          "type": "device",
+          "version": "1.0",
+          "code": "function decodeUplink(input) { return { data: input, warnings: [], errors: [] }; }",
+          "image": "https://raw.githubusercontent.com/TheThingsNetwork/lorawan-devices/master/vendor/acrios/acr-cv-101l-r-eac.png",
+          "lastUpdate": "2025-07-01T19:27:23.620Z",
+          "metadata": {
+            "hardwareVersions": [],
+            "firmwareVersions": [],
+            "profiles": {},
+            "regions": [
+              "EU863-870",
+              "EU863-870"
+            ],
+            "codecId": null
+          }
+        },
+        {
+          "id": "ttn-adeunis-adeunis-default-profile-c",
+          "name": "adeunis adeunis-default-profile-c",
+          "description": "TTN Official Device: adeunis adeunis-default-profile-c",
+          "manufacturer": "adeunis",
+          "model": "adeunis-default-profile-c",
+          "repository": "ttn-official",
+          "type": "device",
+          "version": "1.0",
+          "code": "function decodeUplink(input) { return { data: input, warnings: [], errors: [] }; }",
+          "image": "https://raw.githubusercontent.com/TheThingsNetwork/lorawan-devices/master/vendor/adeunis/adeunis-default-profile-c.png",
+          "lastUpdate": "2025-07-01T19:27:23.812Z",
+          "metadata": {
+            "hardwareVersions": [],
+            "firmwareVersions": [],
+            "profiles": {},
+            "regions": [],
+            "codecId": null
+          }
+        },
+        {
+          "id": "ttn-adeunis-adeunis-default-profile",
+          "name": "adeunis adeunis-default-profile",
+          "description": "TTN Official Device: adeunis adeunis-default-profile",
+          "manufacturer": "adeunis",
+          "model": "adeunis-default-profile",
+          "repository": "ttn-official",
+          "type": "device",
+          "version": "1.0",
+          "code": "function decodeUplink(input) { return { data: input, warnings: [], errors: [] }; }",
+          "image": "https://raw.githubusercontent.com/TheThingsNetwork/lorawan-devices/master/vendor/adeunis/adeunis-default-profile.png",
+          "lastUpdate": "2025-07-01T19:27:23.829Z",
+          "metadata": {
+            "hardwareVersions": [],
+            "firmwareVersions": [],
+            "profiles": {},
+            "regions": [],
+            "codecId": null
+          }
+        },
+        {
+          "id": "ttn-adeunis-adeunis-lora104-profile",
+          "name": "adeunis adeunis-lora104-profile",
+          "description": "TTN Official Device: adeunis adeunis-lora104-profile",
+          "manufacturer": "adeunis",
+          "model": "adeunis-lora104-profile",
+          "repository": "ttn-official",
+          "type": "device",
+          "version": "1.0",
+          "code": "function decodeUplink(input) { return { data: input, warnings: [], errors: [] }; }",
+          "image": "https://raw.githubusercontent.com/TheThingsNetwork/lorawan-devices/master/vendor/adeunis/adeunis-lora104-profile.png",
+          "lastUpdate": "2025-07-01T19:27:23.843Z",
+          "metadata": {
+            "hardwareVersions": [],
+            "firmwareVersions": [],
+            "profiles": {},
+            "regions": [],
+            "codecId": null
+          }
+        },
+        {
+          "id": "ttn-adeunis-analog-codec",
+          "name": "adeunis analog-codec",
+          "description": "TTN Official Device: adeunis analog-codec",
+          "manufacturer": "adeunis",
+          "model": "analog-codec",
+          "repository": "ttn-official",
+          "type": "device",
+          "version": "1.0",
+          "code": "function decodeUplink(input) { return { data: input, warnings: [], errors: [] }; }",
+          "image": "https://raw.githubusercontent.com/TheThingsNetwork/lorawan-devices/master/vendor/adeunis/analog-codec.png",
+          "lastUpdate": "2025-07-01T19:27:23.853Z",
+          "metadata": {
+            "hardwareVersions": [],
+            "firmwareVersions": [],
+            "profiles": {},
+            "regions": [],
+            "codecId": null
+          }
+        },
+        {
+          "id": "ttn-adeunis-analog",
+          "name": "Analog - Sensor Interface",
+          "description": "The Adeunis Analog has 2 inputs for connecting 0-10 V or 4-20 mA sensors and provides LoRaWAN® connectivity to industrial analog/analog PWM sensors already installed on the production sites.",
+          "manufacturer": "adeunis",
+          "model": "analog",
+          "repository": "ttn-official",
+          "type": "device",
+          "version": "1.0",
+          "code": "// TTN Codec: analog2-codec\nfunction decodeUplink(input) {\n  // Auto-generated from TTN Device Repository\n  return {\n    data: {\n      raw: input.bytes,\n      fPort: input.fPort,\n      deviceModel: 'analog',\n      manufacturer: 'adeunis'\n    },\n    warnings: [],\n    errors: []\n  };\n}",
+          "image": "https://raw.githubusercontent.com/TheThingsNetwork/lorawan-devices/master/vendor/adeunis/analog.png",
+          "lastUpdate": "2025-07-01T19:27:23.869Z",
+          "metadata": {
+            "hardwareVersions": [],
+            "firmwareVersions": [],
+            "profiles": {},
+            "regions": [
+              "EU863-870",
+              "EU863-870",
+              "EU863-870"
+            ],
+            "codecId": "analog2-codec"
+          }
+        },
+        {
+          "id": "ttn-agriseen-ga5067-profile-868",
+          "name": "agriseen ga5067-profile-868",
+          "description": "TTN Official Device: agriseen ga5067-profile-868",
+          "manufacturer": "agriseen",
+          "model": "ga5067-profile-868",
+          "repository": "ttn-official",
+          "type": "device",
+          "version": "1.0",
+          "code": "function decodeUplink(input) { return { data: input, warnings: [], errors: [] }; }",
+          "image": "https://raw.githubusercontent.com/TheThingsNetwork/lorawan-devices/master/vendor/agriseen/ga5067-profile-868.png",
+          "lastUpdate": "2025-07-01T19:27:24.044Z",
+          "metadata": {
+            "hardwareVersions": [],
+            "firmwareVersions": [],
+            "profiles": {},
+            "regions": [],
+            "codecId": null
+          }
+        },
+        {
+          "id": "ttn-agriseen-ga5067-profile-915",
+          "name": "agriseen ga5067-profile-915",
+          "description": "TTN Official Device: agriseen ga5067-profile-915",
+          "manufacturer": "agriseen",
+          "model": "ga5067-profile-915",
+          "repository": "ttn-official",
+          "type": "device",
+          "version": "1.0",
+          "code": "function decodeUplink(input) { return { data: input, warnings: [], errors: [] }; }",
+          "image": "https://raw.githubusercontent.com/TheThingsNetwork/lorawan-devices/master/vendor/agriseen/ga5067-profile-915.png",
+          "lastUpdate": "2025-07-01T19:27:24.057Z",
+          "metadata": {
+            "hardwareVersions": [],
+            "firmwareVersions": [],
+            "profiles": {},
+            "regions": [],
+            "codecId": null
+          }
+        },
+        {
+          "id": "ttn-agriseen-ga5067-profile-923",
+          "name": "agriseen ga5067-profile-923",
+          "description": "TTN Official Device: agriseen ga5067-profile-923",
+          "manufacturer": "agriseen",
+          "model": "ga5067-profile-923",
+          "repository": "ttn-official",
+          "type": "device",
+          "version": "1.0",
+          "code": "function decodeUplink(input) { return { data: input, warnings: [], errors: [] }; }",
+          "image": "https://raw.githubusercontent.com/TheThingsNetwork/lorawan-devices/master/vendor/agriseen/ga5067-profile-923.png",
+          "lastUpdate": "2025-07-01T19:27:24.069Z",
+          "metadata": {
+            "hardwareVersions": [],
+            "firmwareVersions": [],
+            "profiles": {},
+            "regions": [],
+            "codecId": null
+          }
+        },
+        {
+          "id": "ttn-agriseen-ga5067",
+          "name": "GA5067 - Cattle Tracking",
+          "description": "GA5067 is a LoRa-based (LTE cat1, LTEM optional) GPS tracking device for cattle tracking with Li-SOCl2 battery. The Collar’s GPS location data will be uplinked to the LoRaWAN gateway according to the schedule you choose, The collar is programmed wirelessly by the network server. You can control how often GPS location data are collected, and can also remotely command program changes to the fixed-rate and mortality schedule, fixed duration time, and GPS location data transmission interval.",
+          "manufacturer": "agriseen",
+          "model": "ga5067",
+          "repository": "ttn-official",
+          "type": "device",
+          "version": "1.0",
+          "code": "function decodeUplink(input) { return { data: input, warnings: [], errors: [] }; }",
+          "image": "https://raw.githubusercontent.com/TheThingsNetwork/lorawan-devices/master/vendor/agriseen/ga5067.png",
+          "lastUpdate": "2025-07-01T19:27:24.084Z",
+          "metadata": {
+            "hardwareVersions": [],
+            "firmwareVersions": [],
+            "profiles": {},
+            "regions": [
+              "EU863-870",
+              "US902-928"
+            ],
+            "codecId": null
+          }
+        },
+        {
+          "id": "ttn-alpha-omega-technology-klax-codec",
+          "name": "alpha-omega-technology klax-codec",
+          "description": "TTN Official Device: alpha-omega-technology klax-codec",
+          "manufacturer": "alpha-omega-technology",
+          "model": "klax-codec",
+          "repository": "ttn-official",
+          "type": "device",
+          "version": "1.0",
+          "code": "function decodeUplink(input) { return { data: input, warnings: [], errors: [] }; }",
+          "image": "https://raw.githubusercontent.com/TheThingsNetwork/lorawan-devices/master/vendor/alpha-omega-technology/klax-codec.png",
+          "lastUpdate": "2025-07-01T19:27:24.313Z",
+          "metadata": {
+            "hardwareVersions": [],
+            "firmwareVersions": [],
+            "profiles": {},
+            "regions": [],
+            "codecId": null
+          }
+        },
+        {
+          "id": "ttn-alpha-omega-technology-klax-profile-eu868",
+          "name": "alpha-omega-technology klax-profile-eu868",
+          "description": "TTN Official Device: alpha-omega-technology klax-profile-eu868",
+          "manufacturer": "alpha-omega-technology",
+          "model": "klax-profile-eu868",
+          "repository": "ttn-official",
+          "type": "device",
+          "version": "1.0",
+          "code": "function decodeUplink(input) { return { data: input, warnings: [], errors: [] }; }",
+          "image": "https://raw.githubusercontent.com/TheThingsNetwork/lorawan-devices/master/vendor/alpha-omega-technology/klax-profile-eu868.png",
+          "lastUpdate": "2025-07-01T19:27:24.326Z",
+          "metadata": {
+            "hardwareVersions": [],
+            "firmwareVersions": [],
+            "profiles": {},
+            "regions": [],
+            "codecId": null
+          }
+        },
+        {
+          "id": "ttn-alpha-omega-technology-klax",
+          "name": "KLAX - Electricity Meter Reader",
+          "description": "The KLAX is a LoRaWAN® device that has an optohead for recording the infrared interface of modern electricity meters.",
+          "manufacturer": "alpha-omega-technology",
+          "model": "klax",
+          "repository": "ttn-official",
+          "type": "device",
+          "version": "1.0",
+          "code": "// TTN Codec: klax-codec\nfunction decodeUplink(input) {\n  // Auto-generated from TTN Device Repository\n  return {\n    data: {\n      raw: input.bytes,\n      fPort: input.fPort,\n      deviceModel: 'klax',\n      manufacturer: 'alpha-omega-technology'\n    },\n    warnings: [],\n    errors: []\n  };\n}",
+          "image": "https://raw.githubusercontent.com/TheThingsNetwork/lorawan-devices/master/vendor/alpha-omega-technology/klax.png",
+          "lastUpdate": "2025-07-01T19:27:24.340Z",
+          "metadata": {
+            "hardwareVersions": [],
+            "firmwareVersions": [],
+            "profiles": {},
+            "regions": [
+              "EU863-870",
+              "EU863-870"
+            ],
+            "codecId": "klax-codec"
+          }
+        },
+        {
+          "id": "ttn-ambitlocker-ambitlocker",
+          "name": "Lock",
+          "description": "The lock ia a digital IoT-managed locking solution with a high level of the security requirements, 5 years of battery lifetime and remote assets control.",
+          "manufacturer": "ambitlocker",
+          "model": "ambitlocker",
+          "repository": "ttn-official",
+          "type": "device",
+          "version": "1.0",
+          "code": "function decodeUplink(input) { return { data: input, warnings: [], errors: [] }; }",
+          "image": "https://raw.githubusercontent.com/TheThingsNetwork/lorawan-devices/master/vendor/ambitlocker/ambitlocker.png",
+          "lastUpdate": "2025-07-01T19:27:24.531Z",
+          "metadata": {
+            "hardwareVersions": [],
+            "firmwareVersions": [],
+            "profiles": {},
+            "regions": [
+              "EU863-870"
+            ],
+            "codecId": null
+          }
+        },
+        {
+          "id": "ttn-ambitlocker-lock-profile",
+          "name": "ambitlocker lock-profile",
+          "description": "TTN Official Device: ambitlocker lock-profile",
+          "manufacturer": "ambitlocker",
+          "model": "lock-profile",
+          "repository": "ttn-official",
+          "type": "device",
+          "version": "1.0",
+          "code": "function decodeUplink(input) { return { data: input, warnings: [], errors: [] }; }",
+          "image": "https://raw.githubusercontent.com/TheThingsNetwork/lorawan-devices/master/vendor/ambitlocker/lock-profile.png",
+          "lastUpdate": "2025-07-01T19:27:24.547Z",
+          "metadata": {
+            "hardwareVersions": [],
+            "firmwareVersions": [],
+            "profiles": {},
+            "regions": [],
+            "codecId": null
+          }
+        },
+        {
+          "id": "ttn-aquascope-aqm-codec",
+          "name": "aquascope aqm-codec",
+          "description": "TTN Official Device: aquascope aqm-codec",
+          "manufacturer": "aquascope",
+          "model": "aqm-codec",
+          "repository": "ttn-official",
+          "type": "device",
+          "version": "1.0",
+          "code": "function decodeUplink(input) { return { data: input, warnings: [], errors: [] }; }",
+          "image": "https://raw.githubusercontent.com/TheThingsNetwork/lorawan-devices/master/vendor/aquascope/aqm-codec.png",
+          "lastUpdate": "2025-07-01T19:27:24.742Z",
+          "metadata": {
+            "hardwareVersions": [],
+            "firmwareVersions": [],
+            "profiles": {},
+            "regions": [],
+            "codecId": null
+          }
+        },
+        {
+          "id": "ttn-aquascope-aqm-profile",
+          "name": "aquascope aqm-profile",
+          "description": "TTN Official Device: aquascope aqm-profile",
+          "manufacturer": "aquascope",
+          "model": "aqm-profile",
+          "repository": "ttn-official",
+          "type": "device",
+          "version": "1.0",
+          "code": "function decodeUplink(input) { return { data: input, warnings: [], errors: [] }; }",
+          "image": "https://raw.githubusercontent.com/TheThingsNetwork/lorawan-devices/master/vendor/aquascope/aqm-profile.png",
+          "lastUpdate": "2025-07-01T19:27:24.756Z",
+          "metadata": {
+            "hardwareVersions": [],
+            "firmwareVersions": [],
+            "profiles": {},
+            "regions": [],
+            "codecId": null
+          }
+        },
+        {
+          "id": "ttn-aquascope-aqm",
+          "name": "Ultrasonic Clamp-On Water Meter AQMLWE01",
+          "description": "The water sensor clamp measures the flow and temperature in a water pipe using a Time of Flight measurement method and transmits the data wirelessly. Through an internal analysis of the flow, water leaks, and other anomalies are detected, and the owner is alerted. The device is clamped onto the outside of the water pipe without the need to interrupt the water supply. Its flexible design and innovative software allow it to be used on water pipes ranging from DN15 to DN40 (diameter 15…50 mm) with all available materials in the market, such as PEX, PEX AL, copper, PE, or steel. It meets all the requirements of the European Metering Directive (MID). With a footprint of only 60 mm above the water pipe and a length of 110 mm, the device is very slim and short, making it easy to install.",
+          "manufacturer": "aquascope",
+          "model": "aqm",
+          "repository": "ttn-official",
+          "type": "device",
+          "version": "1.0",
+          "code": "// TTN Codec: aqm-codec\nfunction decodeUplink(input) {\n  // Auto-generated from TTN Device Repository\n  return {\n    data: {\n      raw: input.bytes,\n      fPort: input.fPort,\n      deviceModel: 'aqm',\n      manufacturer: 'aquascope'\n    },\n    warnings: [],\n    errors: []\n  };\n}",
+          "image": "https://raw.githubusercontent.com/TheThingsNetwork/lorawan-devices/master/vendor/aquascope/aqm.png",
+          "lastUpdate": "2025-07-01T19:27:24.769Z",
+          "metadata": {
+            "hardwareVersions": [],
+            "firmwareVersions": [],
+            "profiles": {},
+            "regions": [
+              "EU863-870",
+              "US902-928"
+            ],
+            "codecId": "aqm-codec"
+          }
+        },
+        {
+          "id": "ttn-aquascope-aqs-codec",
+          "name": "aquascope aqs-codec",
+          "description": "TTN Official Device: aquascope aqs-codec",
+          "manufacturer": "aquascope",
+          "model": "aqs-codec",
+          "repository": "ttn-official",
+          "type": "device",
+          "version": "1.0",
+          "code": "function decodeUplink(input) { return { data: input, warnings: [], errors: [] }; }",
+          "image": "https://raw.githubusercontent.com/TheThingsNetwork/lorawan-devices/master/vendor/aquascope/aqs-codec.png",
+          "lastUpdate": "2025-07-01T19:27:24.783Z",
+          "metadata": {
+            "hardwareVersions": [],
+            "firmwareVersions": [],
+            "profiles": {},
+            "regions": [],
+            "codecId": null
+          }
+        },
+        {
+          "id": "ttn-aquascope-aqs-profile",
+          "name": "aquascope aqs-profile",
+          "description": "TTN Official Device: aquascope aqs-profile",
+          "manufacturer": "aquascope",
+          "model": "aqs-profile",
+          "repository": "ttn-official",
+          "type": "device",
+          "version": "1.0",
+          "code": "function decodeUplink(input) { return { data: input, warnings: [], errors: [] }; }",
+          "image": "https://raw.githubusercontent.com/TheThingsNetwork/lorawan-devices/master/vendor/aquascope/aqs-profile.png",
+          "lastUpdate": "2025-07-01T19:27:24.796Z",
+          "metadata": {
+            "hardwareVersions": [],
+            "firmwareVersions": [],
+            "profiles": {},
+            "regions": [],
+            "codecId": null
+          }
+        },
+        {
+          "id": "ttn-arduino-arduino-868-profile",
+          "name": "arduino arduino-868-profile",
+          "description": "TTN Official Device: arduino arduino-868-profile",
+          "manufacturer": "arduino",
+          "model": "arduino-868-profile",
+          "repository": "ttn-official",
+          "type": "device",
+          "version": "1.0",
+          "code": "function decodeUplink(input) { return { data: input, warnings: [], errors: [] }; }",
+          "image": "https://raw.githubusercontent.com/TheThingsNetwork/lorawan-devices/master/vendor/arduino/arduino-868-profile.png",
+          "lastUpdate": "2025-07-01T19:27:24.985Z",
+          "metadata": {
+            "hardwareVersions": [],
+            "firmwareVersions": [],
+            "profiles": {},
+            "regions": [],
+            "codecId": null
+          }
+        },
+        {
+          "id": "ttn-arduino-arduino-915-profile",
+          "name": "arduino arduino-915-profile",
+          "description": "TTN Official Device: arduino arduino-915-profile",
+          "manufacturer": "arduino",
+          "model": "arduino-915-profile",
+          "repository": "ttn-official",
+          "type": "device",
+          "version": "1.0",
+          "code": "function decodeUplink(input) { return { data: input, warnings: [], errors: [] }; }",
+          "image": "https://raw.githubusercontent.com/TheThingsNetwork/lorawan-devices/master/vendor/arduino/arduino-915-profile.png",
+          "lastUpdate": "2025-07-01T19:27:25.011Z",
+          "metadata": {
+            "hardwareVersions": [],
+            "firmwareVersions": [],
+            "profiles": {},
+            "regions": [],
+            "codecId": null
+          }
+        },
+        {
+          "id": "ttn-arduino-lora-vision-shield",
+          "name": "Portenta Vision Shield LoRa®",
+          "description": "The Arduino Portenta Vision Shield LoRa® consists of a 320x320 pixels camera sensor and two onboard microphones for directional sound detection. It allows you to run embedded computer vision applications. The Vision Shield LoRa® has been designed to work with the Arduino Portenta H7.",
+          "manufacturer": "arduino",
+          "model": "lora-vision-shield",
+          "repository": "ttn-official",
+          "type": "device",
+          "version": "1.0",
+          "code": "// TTN Codec: loravisionshield-codec\nfunction decodeUplink(input) {\n  // Auto-generated from TTN Device Repository\n  return {\n    data: {\n      raw: input.bytes,\n      fPort: input.fPort,\n      deviceModel: 'lora-vision-shield',\n      manufacturer: 'arduino'\n    },\n    warnings: [],\n    errors: []\n  };\n}",
+          "image": "https://raw.githubusercontent.com/TheThingsNetwork/lorawan-devices/master/vendor/arduino/lora-vision-shield.png",
+          "lastUpdate": "2025-07-01T19:27:25.023Z",
+          "metadata": {
+            "hardwareVersions": [],
+            "firmwareVersions": [],
+            "profiles": {},
+            "regions": [
+              "EU863-870",
+              "US902-928",
+              "EU863-870",
+              "US902-928"
+            ],
+            "codecId": "loravisionshield-codec"
+          }
+        },
+        {
+          "id": "ttn-arduino-loravisionshield-codec",
+          "name": "arduino loravisionshield-codec",
+          "description": "TTN Official Device: arduino loravisionshield-codec",
+          "manufacturer": "arduino",
+          "model": "loravisionshield-codec",
+          "repository": "ttn-official",
+          "type": "device",
+          "version": "1.0",
+          "code": "function decodeUplink(input) { return { data: input, warnings: [], errors: [] }; }",
+          "image": "https://raw.githubusercontent.com/TheThingsNetwork/lorawan-devices/master/vendor/arduino/loravisionshield-codec.png",
+          "lastUpdate": "2025-07-01T19:27:25.038Z",
+          "metadata": {
+            "hardwareVersions": [],
+            "firmwareVersions": [],
+            "profiles": {},
+            "regions": [],
+            "codecId": null
+          }
+        },
+        {
+          "id": "ttn-arduino-mkr-wan-1310",
+          "name": "MKR WAN 1310",
+          "description": "The Arduino MKR WAN 1310 is a development board that provides a practical and cost-effective solution to add LoRaWAN® connectivity for projects requiring long-range, low-power wireless communication. Sensors and actuators can be connected to the board through the analog, digital, UART, SPI, and I2C pins. The MKR WAN 1310 comes complete with an ATECC508 secure element, a battery charger, 2MByte SPI Flash, and power consumption as low as 104 uA.",
+          "manufacturer": "arduino",
+          "model": "mkr-wan-1310",
+          "repository": "ttn-official",
+          "type": "device",
+          "version": "1.0",
+          "code": "// TTN Codec: mkrwan1310-codec\nfunction decodeUplink(input) {\n  // Auto-generated from TTN Device Repository\n  return {\n    data: {\n      raw: input.bytes,\n      fPort: input.fPort,\n      deviceModel: 'mkr-wan-1310',\n      manufacturer: 'arduino'\n    },\n    warnings: [],\n    errors: []\n  };\n}",
+          "image": "https://raw.githubusercontent.com/TheThingsNetwork/lorawan-devices/master/vendor/arduino/mkr-wan-1310.png",
+          "lastUpdate": "2025-07-01T19:27:25.054Z",
+          "metadata": {
+            "hardwareVersions": [],
+            "firmwareVersions": [],
+            "profiles": {},
+            "regions": [
+              "EU863-870",
+              "US902-928",
+              "EU863-870",
+              "US902-928",
+              "AU915-928"
+            ],
+            "codecId": "mkrwan1310-codec"
+          }
+        },
+        {
+          "id": "ttn-arwin-technology-as923-profile",
+          "name": "arwin-technology as923-profile",
+          "description": "TTN Official Device: arwin-technology as923-profile",
+          "manufacturer": "arwin-technology",
+          "model": "as923-profile",
+          "repository": "ttn-official",
+          "type": "device",
+          "version": "1.0",
+          "code": "function decodeUplink(input) { return { data: input, warnings: [], errors: [] }; }",
+          "image": "https://raw.githubusercontent.com/TheThingsNetwork/lorawan-devices/master/vendor/arwin-technology/as923-profile.png",
+          "lastUpdate": "2025-07-01T19:27:25.245Z",
+          "metadata": {
+            "hardwareVersions": [],
+            "firmwareVersions": [],
+            "profiles": {},
+            "regions": [],
+            "codecId": null
+          }
+        },
+        {
+          "id": "ttn-arwin-technology-eu868-profile",
+          "name": "arwin-technology eu868-profile",
+          "description": "TTN Official Device: arwin-technology eu868-profile",
+          "manufacturer": "arwin-technology",
+          "model": "eu868-profile",
+          "repository": "ttn-official",
+          "type": "device",
+          "version": "1.0",
+          "code": "function decodeUplink(input) { return { data: input, warnings: [], errors: [] }; }",
+          "image": "https://raw.githubusercontent.com/TheThingsNetwork/lorawan-devices/master/vendor/arwin-technology/eu868-profile.png",
+          "lastUpdate": "2025-07-01T19:27:25.256Z",
+          "metadata": {
+            "hardwareVersions": [],
+            "firmwareVersions": [],
+            "profiles": {},
+            "regions": [],
+            "codecId": null
+          }
+        },
+        {
+          "id": "ttn-arwin-technology-lrs10701-codec",
+          "name": "arwin-technology lrs10701-codec",
+          "description": "TTN Official Device: arwin-technology lrs10701-codec",
+          "manufacturer": "arwin-technology",
+          "model": "lrs10701-codec",
+          "repository": "ttn-official",
+          "type": "device",
+          "version": "1.0",
+          "code": "function decodeUplink(input) { return { data: input, warnings: [], errors: [] }; }",
+          "image": "https://raw.githubusercontent.com/TheThingsNetwork/lorawan-devices/master/vendor/arwin-technology/lrs10701-codec.png",
+          "lastUpdate": "2025-07-01T19:27:25.320Z",
+          "metadata": {
+            "hardwareVersions": [],
+            "firmwareVersions": [],
+            "profiles": {},
+            "regions": [],
+            "codecId": null
+          }
+        },
+        {
+          "id": "ttn-arwin-technology-lrs10701",
+          "name": "LRS10701 - Indoor Air Quality (IAQ) Sensor",
+          "description": "Indoor Air Quality (IAQ) Sensor",
+          "manufacturer": "arwin-technology",
+          "model": "lrs10701",
+          "repository": "ttn-official",
+          "type": "device",
+          "version": "1.0",
+          "code": "// TTN Codec: lrs10701-codec\nfunction decodeUplink(input) {\n  // Auto-generated from TTN Device Repository\n  return {\n    data: {\n      raw: input.bytes,\n      fPort: input.fPort,\n      deviceModel: 'lrs10701',\n      manufacturer: 'arwin-technology'\n    },\n    warnings: [],\n    errors: []\n  };\n}",
+          "image": "https://raw.githubusercontent.com/TheThingsNetwork/lorawan-devices/master/vendor/arwin-technology/lrs10701.png",
+          "lastUpdate": "2025-07-01T19:27:25.334Z",
+          "metadata": {
+            "hardwareVersions": [],
+            "firmwareVersions": [],
+            "profiles": {},
+            "regions": [
+              "EU863-870",
+              "US902-928"
+            ],
+            "codecId": "lrs10701-codec"
+          }
+        },
+        {
+          "id": "ttn-arwin-technology-lrs20100-codec",
+          "name": "arwin-technology lrs20100-codec",
+          "description": "TTN Official Device: arwin-technology lrs20100-codec",
+          "manufacturer": "arwin-technology",
+          "model": "lrs20100-codec",
+          "repository": "ttn-official",
+          "type": "device",
+          "version": "1.0",
+          "code": "function decodeUplink(input) { return { data: input, warnings: [], errors: [] }; }",
+          "image": "https://raw.githubusercontent.com/TheThingsNetwork/lorawan-devices/master/vendor/arwin-technology/lrs20100-codec.png",
+          "lastUpdate": "2025-07-01T19:27:25.345Z",
+          "metadata": {
+            "hardwareVersions": [],
+            "firmwareVersions": [],
+            "profiles": {},
+            "regions": [],
+            "codecId": null
+          }
+        }
+      ],
+      "lastUpdate": "2025-07-01T19:27:25.468Z",
+      "count": 42
+    },
+    "rakwireless": {
+      "decoders": [],
+      "lastUpdate": "2025-07-01T19:22:57.349Z",
+      "count": 0
+    },
+    "ttn-community": {
+      "decoders": [],
+      "lastUpdate": "2025-07-01T19:22:57.536Z",
+      "count": 0
+    }
+  },
+  "lastUpdate": "2025-07-30T20:33:41.234Z"
+}

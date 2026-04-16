@@ -5,16 +5,13 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
-import { 
-  Smartphone, 
-  Code, 
-  Activity
-} from 'lucide-react';
+import { Smartphone, Code, Activity, Timer } from 'lucide-react';
 
 const navigation = [
   { name: 'Webhooks', href: '/webhooks', icon: Activity },
   { name: 'Devices', href: '/devices', icon: Smartphone },
   { name: 'Payload', href: '/payload', icon: Code },
+  { name: 'Jobs', href: '/jobs', icon: Timer },
 ];
 
 export default function Layout({ children }: { children: React.ReactNode }) {
