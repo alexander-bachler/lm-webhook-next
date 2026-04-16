@@ -28,10 +28,10 @@ COPY --from=builder /app/.next/static ./.next/static
 
 COPY --from=builder /app/devices.json ./defaults/devices.json
 COPY docker-entrypoint.sh /app/docker-entrypoint.sh
+RUN chmod +x /app/docker-entrypoint.sh
 
 RUN mkdir -p /app/data /app/logs /app/defaults \
-  && chown -R nextjs:nodejs /app/data /app/logs /app/defaults \
-  && chmod +x /app/docker-entrypoint.sh
+  && chown -R nextjs:nodejs /app/data /app/logs /app/defaults
 
 USER nextjs
 EXPOSE 3000
