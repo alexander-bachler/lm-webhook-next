@@ -26,7 +26,7 @@ COPY --from=builder /app/public ./public
 COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static
 
-RUN mkdir -p /app/data && chown nextjs:nodejs /app/data
+RUN mkdir -p /app/data /app/logs && chown -R nextjs:nodejs /app/data /app/logs
 
 USER nextjs
 EXPOSE 3000
