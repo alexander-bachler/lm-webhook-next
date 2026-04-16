@@ -1,12 +1,17 @@
 /**
- * Scheduler health flag (set by scheduler when running).
+ * Scheduler health flag. Stored on globalThis so it survives Next.js
+ * module chunk duplication between the instrumentation bundle and the
+ * route bundles.
  */
-let schedulerRunning = false;
+declare global {
+  // eslint-disable-next-line no-var
+  var __lmWebhookSchedulerRunning: boolean | undefined;
+}
 
 export function setSchedulerRunning(running: boolean): void {
-  schedulerRunning = running;
+  globalThis.__lmWebhookSchedulerRunning = running;
 }
 
 export function isSchedulerRunning(): boolean {
-  return schedulerRunning;
+  return globalThis.__lmWebhookSchedulerRunning === true;
 }

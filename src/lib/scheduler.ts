@@ -4,15 +4,20 @@ import { runHeartbeatJob } from '@/lib/jobs/heartbeat';
 import { runAggregateJob } from '@/lib/jobs/aggregate';
 import { runResyncJob } from '@/lib/jobs/resync';
 
-let started = false;
+declare global {
+  // eslint-disable-next-line no-var
+  var __lmWebhookSchedulerStarted: boolean | undefined;
+}
 
 export function startScheduler(): void {
-  if (started) return;
+  if (globalThis.__lmWebhookSchedulerStarted) return;
   if (process.env.SCHEDULER_DISABLED === '1') {
+    console.info('[scheduler] disabled via SCHEDULER_DISABLED=1');
     return;
   }
-  started = true;
+  globalThis.__lmWebhookSchedulerStarted = true;
   setSchedulerRunning(true);
+  console.info('[scheduler] started (heartbeat + aggregate + resync)');
 
   cron.schedule('*/2 * * * *', () => {
     void runHeartbeatJob().catch((e) => console.error('[scheduler] heartbeat', e));
