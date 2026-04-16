@@ -25,9 +25,13 @@ RUN addgroup --system --gid 1001 nodejs \
 COPY --from=builder /app/public ./public
 COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static
-COPY --from=builder /app/devices.json ./data/devices.json
 
-RUN mkdir -p /app/data /app/logs && chown -R nextjs:nodejs /app/data /app/logs
+COPY --from=builder /app/devices.json ./defaults/devices.json
+COPY docker-entrypoint.sh /app/docker-entrypoint.sh
+
+RUN mkdir -p /app/data /app/logs /app/defaults \
+  && chown -R nextjs:nodejs /app/data /app/logs /app/defaults \
+  && chmod +x /app/docker-entrypoint.sh
 
 USER nextjs
 EXPOSE 3000
@@ -35,4 +39,5 @@ ENV PORT=3000
 ENV HOSTNAME=0.0.0.0
 ENV DATA_DIR=/app/data
 
+ENTRYPOINT ["/app/docker-entrypoint.sh"]
 CMD ["node", "server.js"]
