@@ -1,0 +1,9 @@
+{
+	"name": "lm_webhook_function",
+	"version": "1.0.0",
+	"main": "index.js",
+	"author": "a.bachler@linemetrics.com",
+	"dependencies": {
+		"zcatalyst-sdk-node": "latest"
+	}
+}

@@ -1,0 +1,11 @@
+{
+	"deployment": {
+		"name": "webhook_handler",
+		"stack": "node20",
+		"type": "basicio",
+		"env_variables": {}
+	},
+	"execution": {
+		"main": "index.js"
+	}
+}
