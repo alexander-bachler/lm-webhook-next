@@ -1,9 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { promises as fs } from 'fs';
-import path from 'path';
-
-// Pfad zur devices.json Datei (verwende die gleiche Datei wie DeviceManager)
-const devicesFilePath = path.join(process.cwd(), 'devices.json');
+import { getDevicesFilePath } from '@/lib/data-paths.js';
 
 // Interface für Device-Daten
 interface Device {
@@ -35,7 +32,7 @@ interface Device {
 // Lade Devices aus JSON-Datei (DeviceManager-Format)
 async function loadDevices(): Promise<Device[]> {
   try {
-    const data = await fs.readFile(devicesFilePath, 'utf8');
+    const data = await fs.readFile(getDevicesFilePath(), 'utf8');
     const deviceManagerData = JSON.parse(data);
     
     // Konvertiere DeviceManager-Format zu Array-Format
@@ -78,7 +75,7 @@ async function saveDevices(devices: Device[]): Promise<void> {
     let deviceManagerData: any = { devices: {}, decoders: {}, lastUpdate: null };
     
     try {
-      const existingData = await fs.readFile(devicesFilePath, 'utf8');
+      const existingData = await fs.readFile(getDevicesFilePath(), 'utf8');
       deviceManagerData = JSON.parse(existingData);
     } catch (error) {
       // Datei existiert nicht oder ist leer, verwende Standard-Format
@@ -116,7 +113,7 @@ async function saveDevices(devices: Device[]): Promise<void> {
     deviceManagerData.devices = deviceMap;
     deviceManagerData.lastUpdate = new Date().toISOString();
     
-    await fs.writeFile(devicesFilePath, JSON.stringify(deviceManagerData, null, 2));
+    await fs.writeFile(getDevicesFilePath(), JSON.stringify(deviceManagerData, null, 2));
   } catch (error) {
     console.error('Fehler beim Speichern der Devices:', error);
     throw new Error('Fehler beim Speichern der Devices');

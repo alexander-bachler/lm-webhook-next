@@ -1,0 +1,11 @@
+node_modules
+.next
+.git
+data
+*.log
+.env
+.env.*
+!.env.example
+client/build
+temp_api_backup
+functions/**/node_modules

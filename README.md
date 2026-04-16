@@ -29,6 +29,16 @@ To learn more about Next.js, take a look at the following resources:
 
 You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
 
+## VPS / Docker
+
+For self-hosted deployment, incoming LoRa webhooks, and persistent data (`DATA_DIR`), see **[docs/DEPLOYMENT-VPS.md](docs/DEPLOYMENT-VPS.md)**.
+
+```bash
+cp .env.example .env
+mkdir -p data
+docker compose up -d --build
+```
+
 ## Deploy on Vercel
 
 The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.

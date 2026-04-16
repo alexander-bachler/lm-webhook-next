@@ -1,5 +1,8 @@
 const logger = require('./logger');
 
+// Global token cache um Token über mehrere Requests hinweg zu teilen
+const tokenCache = new Map();
+
 class LineMetricsClient {
   constructor() {
     this.baseUrl = 'https://rest-api.linemetrics.com';
@@ -7,26 +10,36 @@ class LineMetricsClient {
   }
 
   /**
-   * Get OAuth access token using client credentials
+   * Get cached access token or request a new one
    * @param {string} clientId - LineMetrics Client ID
    * @param {string} clientSecret - LineMetrics Client Secret
    * @returns {Promise<string>} Access token
    */
   async getAccessToken(clientId, clientSecret) {
+    const cacheKey = `${clientId}:${clientSecret}`;
+    const now = Date.now();
+    
+    // Check if we have a valid cached token
+    const cached = tokenCache.get(cacheKey);
+    if (cached && cached.expiresAt > now + 60000) { // Token muss noch mindestens 60s gültig sein
+      logger.info('Verwendung von gecachtem LineMetrics OAuth Token');
+      return cached.accessToken;
+    }
+
+    // Request new token
     try {
+      logger.info('Anfrage eines neuen LineMetrics OAuth Tokens');
+      
       const response = await fetch(`${this.baseUrl}/oauth/access_token`, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/x-www-form-urlencoded'
         },
         body: new URLSearchParams({
           client_id: clientId,
           client_secret: clientSecret,
           grant_type: 'client_credentials'
-        }).toString(),
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded'
-        }
+        }).toString()
       });
 
       if (!response.ok) {
@@ -35,15 +48,27 @@ class LineMetricsClient {
       }
 
       const tokenData = await response.json();
+      
+      // Cache the token with expiry time (mit Sicherheitspuffer von 5 Minuten)
+      const expiresIn = tokenData.expires_in || 3600; // Default 1 Stunde
+      const expiresAt = now + (expiresIn * 1000) - (5 * 60 * 1000); // 5 Minuten Puffer
+      
+      tokenCache.set(cacheKey, {
+        accessToken: tokenData.access_token,
+        expiresAt: expiresAt
+      });
+      
+      logger.info(`Neuer LineMetrics OAuth Token erhalten, gültig bis ${new Date(expiresAt).toISOString()}`);
+      
       return tokenData.access_token;
     } catch (error) {
-      logger.error(`Error getting access token: ${error.message}`);
+      logger.error(`Fehler beim Abrufen des Access Tokens: ${error.message}`);
       throw error;
     }
   }
 
   /**
-   * Send data to LineMetrics Cloud
+   * Send data to LineMetrics Cloud with retry logic
    * @param {Object} config - LineMetrics configuration
    * @param {string} config.clientId - LineMetrics Client ID
    * @param {string} config.clientSecret - LineMetrics Client Secret
@@ -52,9 +77,10 @@ class LineMetricsClient {
    * @param {Object} decodedData - Decoded webhook data
    * @param {string} deviceId - Device identifier
    * @param {string} timestamp - ISO timestamp
+   * @param {number} retryCount - Current retry count (internal)
    * @returns {Promise<Object>} API response
    */
-  async sendData(config, decodedData, deviceId, timestamp) {
+  async sendData(config, decodedData, deviceId, timestamp, retryCount = 0) {
     try {
       if (!config.enabled || !config.clientId || !config.clientSecret || !config.projectId) {
         logger.info('LineMetrics integration not configured or disabled');
@@ -80,7 +106,7 @@ class LineMetricsClient {
         return { success: false, message: 'No valid measurements' };
       }
 
-      // Get OAuth access token
+      // Get OAuth access token (verwendet jetzt Caching)
       const accessToken = await this.getAccessToken(config.clientId, config.clientSecret);
 
       // LineMetrics verwendet einen anderen Endpunkt für Daten
@@ -175,20 +201,36 @@ class LineMetricsClient {
 
       if (!response.ok) {
         const errorText = await response.text();
-        logger.error(`LineMetrics API error: ${response.status} - ${errorText}`);
-        logger.error(`Sent data: ${JSON.stringify(lineMetricsData)}`);
+        
+        // Handle rate limiting with exponential backoff
+        if (response.status === 429 && retryCount < 3) {
+          const retryAfter = parseInt(response.headers.get('Retry-After') || '60', 10);
+          const backoffDelay = Math.min(retryAfter * 1000, (2 ** retryCount) * 1000); // Exponentielles Backoff, max Retry-After
+          
+          logger.warn(`LineMetrics Rate Limit erreicht für Webhook ${config.projectId}. Wiederhole in ${backoffDelay}ms (Versuch ${retryCount + 1}/3)`);
+          
+          // Wait before retrying
+          await new Promise(resolve => setTimeout(resolve, backoffDelay));
+          
+          // Clear cached token to force refresh
+          const cacheKey = `${config.clientId}:${config.clientSecret}`;
+          tokenCache.delete(cacheKey);
+          
+          // Retry with incremented counter
+          return this.sendData(config, decodedData, deviceId, timestamp, retryCount + 1);
+        }
+        
+        logger.error(`LineMetrics API Fehler für Webhook ${config.projectId}: ${response.status} - ${errorText}`);
+        logger.error(`Gesendete Daten: ${JSON.stringify(lineMetricsData)}`);
         logger.error(`Custom Key (Asset ID): ${customKey}`);
         logger.error(`Alias (Data Point ID): ${alias}`);
         logger.error(`LineMetrics API URL: ${this.baseUrl}/v2/data/${customKey}/${alias}`);
-        logger.error(`LineMetrics API Method: POST`);
-        logger.error(`LineMetrics API Headers: ${JSON.stringify({
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${accessToken}`
-        })}`);
+        
         return {
           success: false,
           error: `LineMetrics API error: ${response.status}`,
-          details: errorText
+          details: errorText,
+          retryCount: retryCount
         };
       }
 
@@ -219,7 +261,7 @@ class LineMetricsClient {
    */
   async testConnection(clientId, clientSecret, projectId) {
     try {
-      // Get OAuth access token
+      // Get OAuth access token (verwendet jetzt Caching)
       const accessToken = await this.getAccessToken(clientId, clientSecret);
 
       // Teste die Verbindung durch einen einfachen API-Call
@@ -263,7 +305,7 @@ class LineMetricsClient {
    */
   async getDataPoints(clientId, clientSecret, projectId) {
     try {
-      // Get OAuth access token
+      // Get OAuth access token (verwendet jetzt Caching)
       const accessToken = await this.getAccessToken(clientId, clientSecret);
 
       // LineMetrics Data Points Endpunkt

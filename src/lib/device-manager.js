@@ -1,7 +1,7 @@
 const fs = require('fs');
-const path = require('path');
 const logger = require('./logger');
 const axios = require('axios');
+const { getDevicesFilePath, getDecodersDir } = require('./data-paths');
 
 /**
  * Device Manager für LoRaWAN Geräte und Payload Decoder
@@ -10,8 +10,8 @@ const axios = require('axios');
 
 class DeviceManager {
   constructor() {
-    this.devicesFile = path.join(process.cwd(), 'devices.json');
-    this.decodersDir = path.join(process.cwd(), 'decoders');
+    this.devicesFile = getDevicesFilePath();
+    this.decodersDir = getDecodersDir();
     this.devices = this.loadDevices();
     this.decoderRepositories = {
       'os2iot': 'https://api.github.com/repos/OS2iot/OS2iot-payloaddecoders',

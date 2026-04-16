@@ -130,7 +130,6 @@ export const theme = createTheme({
     '0px 25px 50px rgba(0, 0, 0, 0.15)',
     '0px 25px 50px rgba(0, 0, 0, 0.15)',
     '0px 25px 50px rgba(0, 0, 0, 0.15)',
-    '0px 25px 50px rgba(0, 0, 0, 0.15)',
   ],
   components: {
     MuiCard: {
