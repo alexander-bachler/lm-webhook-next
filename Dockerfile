@@ -25,6 +25,7 @@ RUN addgroup --system --gid 1001 nodejs \
 COPY --from=builder /app/public ./public
 COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static
+COPY --from=builder /app/devices.json ./data/devices.json
 
 RUN mkdir -p /app/data /app/logs && chown -R nextjs:nodejs /app/data /app/logs
 
